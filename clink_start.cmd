@@ -22,6 +22,8 @@ doskey /macrofile="%CLINK_DIR%\aliases"
 :: call :SL "Clink v"
 :: %CLINK_DIR%\clink --version
 
+%CLINK_DIR%\clink installscripts %CLINK_DIR%\clink_completions >nul
+
 :SL (sameline)
 echo|set /p=%1
 exit /b
