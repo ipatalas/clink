@@ -15,15 +15,10 @@ if defined GIT_INSTALL_ROOT (
 
 :: Enhance Path
 set PATH=%CLINK_DIR%\bin;%PATH%
+set HOME=%USERPROFILE%
 
 :: Add aliases
 doskey /macrofile="%CLINK_DIR%\aliases"
 
-:: call :SL "Clink v"
-:: %CLINK_DIR%\clink --version
-
-%CLINK_DIR%\clink installscripts %CLINK_DIR%\clink_completions >nul
-
-:SL (sameline)
-echo|set /p=%1
-exit /b
+:: Add additional install scripts (wrapped around cmd /c to surpress non-zero exit code
+cmd /c "%CLINK_DIR%\clink installscripts %CLINK_DIR%\clink_completions >nul"
