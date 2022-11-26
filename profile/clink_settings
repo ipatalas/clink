@@ -1,35 +1,148 @@
-# When this file is named "default_settings" and is in the binaries
-# directory or profile directory, it provides enhanced default settings.
+# name: Enable automatic suggestions
+# type: boolean
+autosuggest.enable = True
 
-# Override built-in default settings with ones that provide a more
-# enhanced Clink experience.
+# name: Selects default key bindings
+# type: enum
+# options: bash,windows
+clink.default_bindings = bash
 
-autosuggest.enable                = True
-clink.default_bindings            = bash
-clink.logo                        = short
-cmd.ctrld_exits                   = True
-color.arginfo                     = sgr 38;5;172
-color.argmatcher                  = sgr 1;38;5;40
-color.cmd                         = sgr 1;38;5;231
-color.cmdredir                    = sgr 38;5;172
-color.cmdsep                      = sgr 38;5;214
-color.comment_row                 = sgr 38;5;87;48;5;18
-color.description                 = sgr 38;5;39
-color.doskey                      = sgr 1;38;5;75
-color.executable                  = sgr 1;38;5;33
-color.filtered                    = sgr 38;5;231
-color.flag                        = sgr 38;5;117
-color.hidden                      = sgr 38;5;160
-color.histexpand                  = sgr 97;48;5;55
-color.horizscroll                 = sgr 38;5;16;48;5;30
-color.input                       = sgr 38;5;222
-color.readonly                    = sgr 38;5;28
-color.selected_completion         = sgr 38;5;16;48;5;254
-color.selection                   = sgr 38;5;16;48;5;179
-color.suggestion                  = sgr 38;5;239
-color.unrecognized                = sgr 38;5;203
-history.max_lines                 = 10000
-history.time_stamp                = show
-match.expand_envvars              = True
-match.substring                   = True
+# name: Controls what startup logo to show
+# type: enum
+# options: none,full,short
+clink.logo = short
+
+# name: Pressing Ctrl-D exits session
+# type: boolean
+cmd.ctrld_exits = True
+
+# name: Argument color
+# type: color
+color.arg = bold
+
+# name: Argument info color
+# type: color
+color.arginfo = sgr 38;5;172
+
+# name: Argmatcher color
+# type: color
+color.argmatcher = sgr 1;38;5;40
+
+# name: Shell command completions
+# type: color
+color.cmd = sgr 1;38;5;231
+
+# name: Color for < and > redirection symbols
+# type: color
+color.cmdredir = sgr 38;5;172
+
+# name: Color for & and | command separators
+# type: color
+color.cmdsep = sgr 38;5;214
+
+# name: Color for comment row
+# type: color
+color.comment_row = sgr 38;5;87;48;5;18
+
+# name: Description completion color
+# type: color
+color.description = sgr 38;5;39
+
+# name: Doskey completions
+# type: color
+color.doskey = sgr 1;38;5;75
+
+# name: Color for executable command word
+# type: color
+color.executable = sgr 1;38;5;33
+
+# name: Filtered completion color
+# type: color
+color.filtered = sgr 38;5;231
+
+# name: Flag color
+# type: color
+color.flag = sgr 38;5;117
+
+# name: Color for preferred branch completions
+# type: color
+color.git.star = bright green
+
+# name: Hidden file completions
+# type: color
+color.hidden = sgr 38;5;160
+
+# name: History expansion color
+# type: color
+color.histexpand = sgr 97;48;5;55
+
+# name: Horizontal scroll marker color
+# type: color
+color.horizscroll = sgr 38;5;16;48;5;30
+
+# name: Input text color
+# type: color
+color.input = sgr 38;5;222
+
+# name: For user-interaction prompts
+# type: color
+color.interact = bold
+
+# name: Message area color
+# type: color
+color.message = default
+
+# name: Readonly file completions
+# type: color
+color.readonly = sgr 38;5;28
+
+# name: Selected completion color
+# type: color
+color.selected_completion = sgr 38;5;16;48;5;254
+
+# name: Selection color
+# type: color
+color.selection = sgr 38;5;16;48;5;179
+
+# name: Color for suggestion text
+# type: color
+color.suggestion = sgr 38;5;239
+
+# name: Unexpected argument color
+# type: color
+color.unexpected = default
+
+# name: Color for unrecognized command word
+# type: color
+color.unrecognized = sgr 38;5;203
+
+# name: Color for yarn run local module
+# type: color
+color.yarn.module = bright green
+
+# name: Color for yarn run project.json script
+# type: color
+color.yarn.script = bright blue
+
+# name: The number of history lines to save
+# type: integer
+history.max_lines = 10000
+
+# name: History item timestamps
+# type: enum
+# options: off,save,show
+history.time_stamp = show
+
+# name: Expand envvars when completing
+# type: boolean
+match.expand_envvars = True
+
+# name: Try substring if no prefix matches
+# type: boolean
+match.substring = True
+
+# name: Controls when past prompts are collapsed
+# type: enum
+# options: off,always,same_dir
+prompt.transient = off
 
