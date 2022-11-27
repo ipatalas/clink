@@ -17,6 +17,9 @@ if defined GIT_INSTALL_ROOT (
 set PATH=%CLINK_DIR%\bin;%PATH%
 set HOME=%USERPROFILE%
 
+:: Extra env vars
+set FZF_CTRL_T_COMMAND=rg --files --hidden --follow --glob "!.git"
+
 :: Add aliases
 doskey /macrofile="%CLINK_DIR%\aliases"
 
