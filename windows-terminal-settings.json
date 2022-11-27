@@ -44,6 +44,9 @@
     {
         "defaults":
         {
+            "backgroundImage": "%CLINK_DIR%\\bg.jpg",
+            "backgroundImageOpacity": 0.50,
+            "backgroundImageStretchMode": "uniformToFill",
             "experimental.retroTerminalEffect": false,
             "font":
             {

@@ -25,7 +25,7 @@ This is a "backup" of my current WT settings. Feel free to use it but YMMV and I
 # Installation
 
 1. Install Clink from this repo (set CLINK_DIR env to your directory)
-2. Install all fonts from `fonts` folder
+2. Install all fonts from `fonts` folder and use it in Windows Terminal
 3. Install required dependencies:
 ```shell
 $ choco install fzf gsudo ripgrep lazydocker
