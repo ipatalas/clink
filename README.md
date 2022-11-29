@@ -51,5 +51,23 @@ Put the following into `profiles.list[]` section:
 }
 ```
 
+5. Set as default profile if you like it
+
 # Extras
 
+## Docker
+
+If you're a docker user I strongly recommend trying [lazydocker](https://github.com/jesseduffield/lazydocker) and `dive` when building your own images (bundled inside `bin` in this repo so available from anywhere)
+
+## Total Commander
+
+I'm a fan of this so why not make them coexist?
+
+First of all configure an alias so that you can run a WT session by typing in `cmd`:
+![configuration](total-commander.png)
+This way it will run a WT session inside your current directory (from active pane).
+
+It can also work the other way around. There is an alias defined in [aliases](aliases) file so when you run `tc.` inside Windows Terminal it should open current directory in Total Commander.
+Adjust the alias to your liking (left or right pane, etc.).
+
+Bear in mind this relies on **%COMMANDER_EXE%** envinronment variable. This is automatically provided by Total Commander process when you start your WT process from inside TC. Otherwise you can adjust the alias to use fixed path or set this env var globally for your user in the system.
