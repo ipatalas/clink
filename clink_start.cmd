@@ -18,6 +18,8 @@ set PATH=%CLINK_DIR%\bin;%PATH%
 set HOME=%USERPROFILE%
 
 :: Extra env vars
+
+::   use ripgrep instead of dir for fzf (faster)
 set FZF_CTRL_T_COMMAND=rg --files --hidden --follow --glob "!.git"
 
 :: Add aliases

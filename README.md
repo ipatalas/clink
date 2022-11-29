@@ -27,11 +27,17 @@ This is a "backup" of my current WT settings. Feel free to use it but YMMV and I
 
 1. Install Clink from this repo (set CLINK_DIR env to your directory)
 2. Install all fonts from `fonts` folder and use it in Windows Terminal
-3. Install required dependencies:
+3. Install required dependencies using the script (or manually if you don't use `choco`):
 ```shell
-$ choco install fzf gsudo ripgrep lazydocker
+$ choco install fzf gsudo ripgrep
 ```
-4. Setup Windows Terminal task:
+4. Setup Windows Terminal task: 
+
+You can open your settings file by opening Command Palette (**Ctrl-Shift-P** by default), typing `json` and selecting `Open settings file (JSON)` (**Ctrl-Shift-,** by default)
+
+![settings](settings-file.png)
+
+Put the following into `profiles.list[]` section:
 ```json
 {
     "bellStyle": "taskbar",
@@ -44,3 +50,6 @@ $ choco install fzf gsudo ripgrep lazydocker
     "startingDirectory": "%USERPROFILE%"
 }
 ```
+
+# Extras
+
