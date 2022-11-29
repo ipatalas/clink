@@ -9,6 +9,7 @@ This is a "backup" of my current WT settings. Feel free to use it but YMMV and I
 - [Clink flex prompt](https://github.com/chrisant996/clink-flex-prompt) + font for glyphs
 - Integration with [fzf](https://github.com/chrisant996/clink-fzf)
 - [aliases](aliases)
+- [gsudo](https://github.com/gerardog/gsudo) - `sudo` for Windows, eg. `sudo choco install ...`
 - some additional utilities bundled:
   - [ab.exe](https://en.wikipedia.org/wiki/ApacheBench)
   - [bat.exe](https://github.com/sharkdp/bat) - `cat` with syntax highlighting
@@ -38,7 +39,7 @@ $ choco install fzf gsudo ripgrep lazydocker
     "elevate": false,
     "guid": "{6d765724-f16b-47d1-9e76-60051d01d354}",
     "hidden": false,
-    "icon": "D:\\Programs\\clink\\clink.ico",
+    "icon": "%CLINK_DIR%\\clink.ico",
     "name": "Clink",
     "startingDirectory": "%USERPROFILE%"
 }
