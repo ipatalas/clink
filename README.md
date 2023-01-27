@@ -51,6 +51,33 @@ Put the following into `profiles.list[]` section:
 
 5. Set as default profile if you like it
 
+# VSCode integration
+
+You can have the same experience in VSCode terminal by adding the following to the settings (`Preferences: Open User Settings (JSON)` command):
+
+```json
+  "terminal.integrated.profiles.windows": {
+    "Clink": {
+      "path": [
+        "${env:windir}\\Sysnative\\cmd.exe",
+        "${env:windir}\\System32\\cmd.exe"
+      ],
+      "args": [
+        "/s",
+        "/k",
+        "%CLINK_DIR%\\clink_x64.exe",
+        "inject",
+        "--profile",
+        "%CLINK_DIR%\\profile"
+      ],
+      "color": "terminal.ansiBlue",
+      "icon": "terminal"
+    },
+  },
+  "terminal.integrated.fontFamily": "'MesloLGS NF'",
+  "terminal.integrated.defaultProfile.windows": "Clink",
+```
+
 # Extras
 
 ## Docker
