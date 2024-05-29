@@ -1,2 +1,4 @@
 /profile/*.log
+/profile/clink_errorlevel_*.txt
 /profile/clink_history*
+/~*.old
