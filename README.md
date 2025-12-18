@@ -9,14 +9,10 @@ This is a "backup" of my current WT settings. Feel free to use it but YMMV and I
 - [Clink flex prompt](https://github.com/chrisant996/clink-flex-prompt) + font for glyphs
 - Integration with [fzf](https://github.com/chrisant996/clink-fzf)
 - [aliases](aliases)
-- [gsudo](https://github.com/gerardog/gsudo) - `sudo` for Windows, eg. `sudo choco install ...`
 - some additional utilities bundled:
   - [bat.exe](https://github.com/sharkdp/bat) - `cat` with syntax highlighting
   - curl.exe
-  - [jq.exe](https://stedolan.github.io/jq/tutorial/) (query json from cmd)
-  - cloc.exe to measure lines of code in project
   - TimeMem.exe (UNIX `time` alternative)
-  - [xml.exe](http://xmlstar.sourceforge.net/doc/UG/ch04.html) (query xml from cmd)
   - \+ few others (see [bin](bin))
 
 ![image](screenshot.png)
@@ -27,7 +23,7 @@ This is a "backup" of my current WT settings. Feel free to use it but YMMV and I
 2. Install all fonts from `fonts` folder and use it in Windows Terminal
 3. Install required dependencies using the script (or manually if you don't use `choco`):
 ```shell
-$ choco install fzf gsudo ripgrep
+$ choco install fzf eza ripgrep jq
 ```
 4. Setup Windows Terminal task: 
 
@@ -50,6 +46,9 @@ Put the following into `profiles.list[]` section:
 ```
 
 5. Set as default profile if you like it
+
+> [!NOTE] 
+> Clink can be configured with autorun and it then attaches automatically to all cmd.exe sessions. I prefer to have it bundled inside the repo and run explicitly but feel free to adjust to your liking.
 
 # VSCode integration
 
