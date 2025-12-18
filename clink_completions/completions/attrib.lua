@@ -6,7 +6,7 @@
 --------------------------------------------------------------------------------
 local clink_version = require('clink_version')
 if not clink_version.supports_argmatcher_delayinit then
-    print("attrib.lua argmatcher requires a newer version of Clink; please upgrade.")
+    log.info("attrib.lua argmatcher requires a newer version of Clink; please upgrade.")
     return
 end
 
@@ -38,7 +38,7 @@ local function delayinit(argmatcher)
     end
     inited = true
 
-    local f = io.popen('attrib /?')
+    local f = io.popen('2>nul attrib /?')
     if not f then
         return
     end

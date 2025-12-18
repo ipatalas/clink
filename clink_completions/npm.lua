@@ -19,7 +19,7 @@ local function get_npm_config_value (config_entry)
     assert(config_entry and type(config_entry) == "string" and #config_entry > 0,
         "get_npm_config_value: config_entry param should be non-empty string")
 
-    local proc = io.popen("npm config get "..config_entry.." 2>nul")
+    local proc = io.popen("2>nul npm config get "..config_entry)
     if not proc then return "" end
 
     local value = proc:read()
@@ -214,7 +214,15 @@ local npm_parser = parser({
 
 clink.arg.register_parser("npm", npm_parser)
 
+local function escape_percents(s)
+    return s:gsub('%%', '%%%%')
+end
+
 local function npm_prompt_filter()
+    -- Automatically disable this when a .clinkprompt custom prompt is active.
+    local customprompt = clink.getclinkprompt and clink.getclinkprompt()
+    if customprompt and customprompt ~= "" then return false end
+
     local package_file = io.open('package.json')
     if not package_file then return false end
 
@@ -230,7 +238,7 @@ local function npm_prompt_filter()
     local package_name = package.name or "<no name>"
     local package_version = package.version and "@"..package.version or ""
     local package_string = color.color_text("("..package_name..package_version..")", color.YELLOW)
-    clink.prompt.value = clink.prompt.value:gsub('{git}', '{git} '..package_string)
+    clink.prompt.value = clink.prompt.value:gsub('{git}', '{git} '..escape_percents(package_string))
 
     return false
 end

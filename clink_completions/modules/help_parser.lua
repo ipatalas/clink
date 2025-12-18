@@ -10,7 +10,7 @@
 --      help_parser.make('curl "--help all" curl')
 --      help_parser.make('xcopy /?')
 --
--- function run(argmatcher, parser, command, config)
+--  function run(argmatcher, parser, command, config)
 --
 --      Runs parser on the command output to initialize argmatcher.
 --
@@ -28,9 +28,11 @@
 --                      case=2,         -- Add flags with verbatim casing.
 --                      slashes=true,   -- Add slash copies of minus flags
 --                                      -- (add /x for -x, etc).
+--                      concat=true,    -- Allow one letter flags to be
+--                                      -- concatenated (/hk == /h /k).
 --                  }
 --
--- function make(command, help_flag, parser, config, closure)
+--  function make(command, help_flag, parser, config, closure)
 --
 --      Makes a delayinit argmatcher for the command.  A completion script can
 --      be a single line, using this:
@@ -48,7 +50,7 @@
 --
 -- Parser functions:
 --
---      function parser(context, flags, descriptions, hideflags, line)
+--  function parser(context, flags, descriptions, hideflags, line)
 --
 --      context         A container table for use by the parser function.
 --      flags           Use add_pending() to update flags.
@@ -56,7 +58,8 @@
 --      hideflags       A table of flag names to hide (table of strings).
 --      line            The help text line to be parsed.
 --
--- function add_pending(context, flags, descriptions, hideflags, pending)
+--  function add_pending(context, flags, descriptions, hideflags, pending)
+--
 --      context         Pass the context table from the parser() function.
 --      flags           Pass the flags table from the parser() function.
 --      descriptions    Pass the descriptions table from the parser() function.
@@ -70,16 +73,32 @@
 --                      }
 
 --------------------------------------------------------------------------------
+-- NOTE:  This script can be run as a standalone script for debugging purposes:
+--
+-- The following usage:
+--
+--      clink lua help_parser {parser_name} {command_line}
+--
+-- Prints the results of:
+--
+--      local help_parser = require('help_parser')
+--      help_parser.run(argmatcher, 'parser_name', 'command_line')
+
+--------------------------------------------------------------------------------
 if not clink then
     -- E.g. some unit test systems will run this module *outside* of Clink.
     return
 end
 if (clink.version_encoded or 0) < 10030010 then -- Requires _argmatcher:setdelayinit().
-    if log.info then
+    if log and log.info then
         log.info('The help_parser.lua module requires a newer version of Clink; please upgrade.')
     end
     return
 end
+
+local has_ah, ah
+has_ah, ah = pcall(require, "arghelper")
+ah = has_ah and ah or nil
 
 --------------------------------------------------------------------------------
 local function sentence_casing(text)
@@ -94,8 +113,28 @@ local function sentence_casing(text)
 end
 
 --------------------------------------------------------------------------------
-local _file_keywords = { 'file', 'files', 'filename', 'glob' }
-local _dir_keywords = { 'dir', 'dirs' }
+local function expand_tabs(text)
+    local s = ''
+    local i = 1
+    while true do
+        -- Find next TAB.
+        local next = text:find('\t', i, true--[[plain]]) or (#text + 1)
+        -- Append up to next TAB or EOL.
+        s = s..text:sub(i, next - 1)
+        -- Stop if EOL.
+        if text:sub(i) == '' then
+            break
+        end
+        -- Expand TAB.
+        s = s..string.rep(' ', 8 - (console.cellcount(s) % 8))
+        i = next + 1
+    end
+    return s
+end
+
+--------------------------------------------------------------------------------
+local _file_keywords = { 'file', 'files', 'filename', 'filenames', 'glob' }
+local _dir_keywords = { 'dir', 'dirs', 'directory', 'directories', 'path', 'paths' }
 
 for _, k in ipairs(_file_keywords) do
     _file_keywords[' <' .. k .. '>'] = true
@@ -134,6 +173,7 @@ local function add_pending(context, flags, descriptions, hideflags, pending) -- 
             if not pending.flag:match('[:=]$') and not pending.display:match('^[ \t]') then -- luacheck: ignore 542
                 -- -x<n> or -x[n] or -Tn or etc.  Argmatchers must be separated
                 -- from flag by : or = or space.  So, no argmatcher.
+                --TODO: The onadvance and onlink callbacks make this possible.
             else
                 local args = clink.argmatcher()
                 if is_file_arg(pending.display) then
@@ -233,7 +273,7 @@ local function basic_parser(context, flags, descriptions, hideflags, line)
         if indent then
             if #context.pending.desc == 0 then
                 context.pending.indent = #indent
-            elseif #indent ~= context.pending.indent then
+            elseif console.cellcount(expand_tabs(indent)) ~= context.pending.indent then
                 indent = nil
                 d = nil
             end
@@ -243,6 +283,9 @@ local function basic_parser(context, flags, descriptions, hideflags, line)
                 end
                 context.pending.desc = context.pending.desc .. d:gsub('[ \t]+$', '')
             end
+        else
+            indent = nil
+            d = nil
         end
     end
 
@@ -298,7 +341,7 @@ local function basic_parser(context, flags, descriptions, hideflags, line)
 
         context.pending.flag = f
         context.pending.desc = sentence_casing(d)
-        context.pending.indent = #indent + #f + #pad
+        context.pending.indent = console.cellcount(expand_tabs(indent..f..pad))
         context.pending.has_arg = context.pending.display and true
     end
 end
@@ -365,7 +408,8 @@ end
 -- The GNU parser recognizes this layout:
 --
 --      ... ignore lines unless they start with at least 2 spaces ...
---        -a...         description
+--        -a...         description which could be
+--                      more than one line
 --        -a...
 --                      description which could be
 --                      more than one line
@@ -388,7 +432,8 @@ end
 --
 -- Some flags have a predefined list of args:
 --
---        --foo=XYZ     description
+--        --foo=XYZ     description which could be
+--                      more than one line
 --                      XYZ is 'a', 'b', or 'c'
 --
 -- Recognizes many variations of file and dir arg types.
@@ -402,33 +447,35 @@ end
 local function gnu_parser(context, flags, descriptions, hideflags, line)
     local x = line:match('^                +([^ ].+)$')
     if x then
-        if context.arg_line_missing_desc then
-            -- The line is a description.
+        -- The line is an arg list.
+        if not context.arg_line_missing_desc and
+                context.pending and
+                context.pending.expect_args then
+            local words = string.explode(line, ' ,')
+            if clink.upper(words[1]) == words[1] and words[2] == 'is' then
+                local arglist = {}
+                for _,w in ipairs(words) do
+                    local arg = w:match("^'(.*)'$")
+                    if arg then
+                        table.insert(arglist, arg)
+                    end
+                end
+                context.pending.argmatcher = clink.argmatcher():addarg(arglist)
+                context.pending.expect_args = nil
+            end
+        else
+            -- The line is part of a description.
+            context.arg_line_missing_desc = nil
             if context.desc then
                 context.desc = context.desc .. ' '
             end
             context.desc = (context.desc or '') .. x
-        else
-            -- The line is an arg list.
-            if context.pending and context.pending.expect_args then
-                local words = string.explode(line, ' ,')
-                if clink.upper(words[1]) == words[1] and words[2] == 'is' then
-                    local arglist = {}
-                    for _,w in ipairs(words) do
-                        local arg = w:match("^'(.*)'$")
-                        if arg then
-                            table.insert(arglist, arg)
-                        end
-                    end
-                    context.pending.argmatcher = clink.argmatcher():addarg(arglist)
-                    context.pending.expect_args = nil
-                end
-            end
         end
     else
         -- Add any pending flags.
         if context.pending then
             if context.desc then
+                context.expect_args = context.desc:find(';$')
                 context.desc = context.desc:gsub('%.+$', '')
                 context.desc = context.desc:gsub(';$', '')
                 context.desc = sentence_casing(context.desc)
@@ -438,6 +485,7 @@ local function gnu_parser(context, flags, descriptions, hideflags, line)
             for _,f in ipairs(context.pending) do
                 if f.flag == '-NUM' then -- luacheck: ignore 542
                     -- Clink can't represent minus followed by any number.
+                    --TODO:  This is possible with onarg and onlink callbacks.
                 else
                     context.pending.flag = f.flag
                     context.pending.has_arg = f.has_arg or (f.has_arg == nil and context.pending.arginfo)
@@ -479,7 +527,7 @@ local function gnu_parser(context, flags, descriptions, hideflags, line)
                 -- All flags on a single line share one argmatcher.
                 local d
                 local list = string.explode(s, ',')
-                context.pending.expect_args = true
+                context.pending.expect_args = nil
                 for _,f in ipairs(list) do
                     f = f:match('^ *([^ ].*)$')
                     if f then
@@ -489,6 +537,7 @@ local function gnu_parser(context, flags, descriptions, hideflags, line)
                             if f then
                                 local feq = f .. '='
                                 context.pending.arginfo = d
+                                context.pending.expect_args = true
                                 table.insert(context.pending, { flag=f, has_arg=false })
                                 table.insert(context.pending, { flag=feq, has_arg=true, display=d })
                             end
@@ -504,6 +553,7 @@ local function gnu_parser(context, flags, descriptions, hideflags, line)
                             f,d = f:match('^([^=]+=)(.*)$')
                             if f then
                                 context.pending.arginfo = d
+                                context.pending.expect_args = true
                                 table.insert(context.pending, { flag=f, has_arg=true, display=d })
                             end
                         elseif f:find(' ') then
@@ -511,6 +561,7 @@ local function gnu_parser(context, flags, descriptions, hideflags, line)
                             f,d = f:match('^([^ ]+)( .*)$')
                             if f then
                                 context.pending.arginfo = d
+                                context.pending.expect_args = true
                                 table.insert(context.pending, { flag=f, has_arg=true, display=d })
                             end
                         else
@@ -530,6 +581,11 @@ local _parsers = {
     ['curl'] = curl_parser,
     ['gnu'] = gnu_parser,
 }
+
+--------------------------------------------------------------------------------
+local function get_parser(parser)
+    return _parsers[parser:lower()]
+end
 
 --------------------------------------------------------------------------------
 local function run(argmatcher, parser, command, config)
@@ -626,6 +682,15 @@ local function run(argmatcher, parser, command, config)
     argmatcher:addflags(actual_flags)
     argmatcher:adddescriptions(descriptions)
     argmatcher:hideflags(hideflags)
+
+    if config.concat and argmatcher.setclassifier and ah then
+        if ah.make_one_letter_concat_classifier_func then
+            argmatcher:setclassifier(ah.make_one_letter_concat_classifier_func(actual_flags, argmatcher))
+            if ah.make_one_letter_concat_onalias_func then
+                argmatcher:addflags({ onalias=ah.make_one_letter_concat_onalias_func(argmatcher) })
+            end
+        end
+    end
 end
 
 --------------------------------------------------------------------------------
@@ -647,4 +712,5 @@ return {
     run=run,
     make=make,
     add_pending=add_pending,
+    get_parser=get_parser,
 }

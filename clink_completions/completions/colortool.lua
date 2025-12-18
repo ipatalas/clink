@@ -1,12 +1,12 @@
 local clink_version = require('clink_version')
 if not clink_version.supports_argmatcher_delayinit then
-    print("colortool.lua argmatcher requires a newer version of Clink; please upgrade.")
+    log.info("colortool.lua argmatcher requires a newer version of Clink; please upgrade.")
     return
 end
 
 local function init_themes(argmatcher, argindex) -- luacheck: no unused
     local matches = {}
-    local r = io.popen('colortool -s')
+    local r = io.popen('2>nul colortool -s')
     if not r then
         return
     end
@@ -25,8 +25,15 @@ local function init_themes(argmatcher, argindex) -- luacheck: no unused
     return matches
 end
 
+local function forcequoting(_, _, _, builder)
+    if builder.setforcequoting then
+        builder:setforcequoting()
+    end
+    return {}
+end
+
 local function closure(argmatcher)
-    argmatcher:addarg({delayinit=init_themes})
+    argmatcher:addarg({delayinit=init_themes, forcequoting})
     argmatcher:nofiles()
 end
 

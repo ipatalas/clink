@@ -16,7 +16,7 @@ end
 
 local clink_version = require('clink_version')
 if not clink_version.supports_argmatcher_delayinit then
-    print("premake5.lua argmatcher requires a newer version of Clink; please upgrade.")
+    log.info("premake5.lua argmatcher requires a newer version of Clink; please upgrade.")
     return
 end
 
@@ -42,7 +42,7 @@ local function delayinit(argmatcher)
     local pending_link
     local values
     local placeholder
-    local r = io.popen('premake5.exe --help 2>nul')
+    local r = io.popen('2>nul premake5.exe --help')
 
     -- The output from premake5 follows this layout:
     --

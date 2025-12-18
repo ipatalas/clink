@@ -6,7 +6,7 @@
 
 local clink_version = require('clink_version')
 if not clink_version.supports_argmatcher_delayinit then
-    print("less.lua argmatcher requires a newer version of Clink; please upgrade.")
+    log.info("less.lua argmatcher requires a newer version of Clink; please upgrade.")
     return
 end
 
@@ -18,7 +18,7 @@ local function init(argmatcher)
     end
     inited = true
 
-    local file = io.popen('less --help')
+    local file = io.popen('2>nul less --help')
     if not file then
         return
     end
