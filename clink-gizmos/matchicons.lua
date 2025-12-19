@@ -1,0 +1,59 @@
+-- This script replaces the clink.dirmatches() and clink.filematches() functions
+-- and adds "icons" for file and directory matches.
+--
+-- It requires using a Nerd Font in your terminal or console window.
+-- Visit https://nerdfonts.com for more information about Nerd Fonts.
+--
+-- This script is disabled by default.
+--  - You can enable icons by running `clink set matchicons.enable true`
+--  - You can disable icons by running `clink set matchicons.enable false`
+--
+-- Other Lua scripts can use the following public function to add their own
+-- icons to matches, but --WARNING!-- ONLY IF nothing calls clink.dirmatches(),
+-- or clink.filematches(), clink.dirmatchesexact(), or clink.filematchesexact().
+-- If any of those are used along with the following, then some matches will
+-- end up with TWO icons.  NOTE:  Since the October 2025 version, it's safe to
+-- call matchicons.addicontomatch() or matchicons.addicons() multiple times
+-- (once an icon has been added, further calls have no effect).
+--
+-- This adds a "!" icon to the match in m, where m is a table in the format
+-- expected by builder:addmatch().  If matchicons are disabled or the matchicons
+-- script is not loaded, then it gracefully has no effect.
+--
+--      if matchicons and matchicons.addicontomatch then
+--          matchicons.addicontomatch(m, "!", "93")
+--      end
+--
+-- This adds icons to all file and directory type matches in the input table,
+-- which must be in the format expect by builder:addmatches().  If matchicons
+-- are disabled or the matchicons script is not loaded, then it gracefully has
+-- no effect.
+--
+--      if matchicons and matchicons.addicons then
+--          matchicons.addicons(matches)
+--      end
+--
+-- This gets the icon for a file or directory match.
+--
+--      local icon = matchicons.geticon(match)
+--
+-- Starting in the October 2025 version, the code has been moved to a Lua module
+-- so that it can be loaded early, before any other scripts try to use the
+-- clink.filematches and clink.dirmatches functions.  If a script uses those too
+-- early, then make a Lua script that gets loaded earlier -- an alphabetically
+-- earlier script name in the same directory, or a script in a script directory
+-- earlier in the scripts path (run 'clink info' to see the scripts path).
+--
+--      require("matchicons_module")
+--
+--------------------------------------------------------------------------------
+-- WARNING:  This script makes clink.dirmatches() and clink.filematches()
+-- behave slightly differently than how they're documented.  That can break
+-- scripts, if they expect the functions to behave exactly how they're
+-- documented.
+--
+-- OTHER CAVEATS:  This can be incompatible with completion scripts that
+-- generate custom display strings themselves.
+--------------------------------------------------------------------------------
+
+require("matchicons_module") -- Ensure it's loaded, if it hasn't been already.

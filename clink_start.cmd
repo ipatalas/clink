@@ -27,3 +27,4 @@ doskey /macrofile="%CLINK_DIR%\aliases"
 
 :: Add additional install scripts (wrapped around cmd /c to surpress non-zero exit code
 cmd /c "%CLINK_DIR%\clink installscripts %CLINK_DIR%\clink_completions >nul"
+cmd /c "%CLINK_DIR%\clink installscripts %CLINK_DIR%\clink-gizmos >nul"

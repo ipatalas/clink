@@ -1,0 +1,186 @@
+# Clink Gizmos
+
+This is a collection of Lua scripts for use with [Clink](https://github.com/chrisant996/clink).
+
+> [!NOTE]
+> This includes [clink-fzf](https://github.com/chrisant996/clink-fzf), so you don't need both -- clink-gizmos contains a collection of scripts, and clink-fzf contains a single script.
+
+## How To Install
+
+The easiest way to install it for use with your Clink is:
+
+1. Make sure you have [git](https://www.git-scm.com/downloads) installed.
+2. Clone this repo into a local directory via <code>git clone https://github.com/chrisant996/clink-gizmos <em>local_directory</em></code>.
+3. Tell Clink to load scripts from the repo via <code>clink installscripts <em>local_directory</em></code>.
+4. Start a new session of Clink.
+
+Get updates using `git pull` and normal git workflow.
+
+## Files and Directories
+
+The repo's root directory contains various useful scripts which are loaded when Clink is started.  They are discussed in the next section.
+
+The "modules" subdirectory contains helper scripts that are used by the scripts in the other directories.
+
+> [!NOTE]
+> All completion scripts have moved to the [clink-completions](https://github.com/vladimir-kotikov/clink-completions) repo.
+
+# Features
+
+> [!TIP]
+> Each script file contains usage and/or customization information in comments at the top of the script file.
+
+Script Name | Description
+-|-
+[abbr.lua](abbr.lua) | Reads abbreviations and corresponding expansions from a .abbr file.  Pressing <kbd>Space</kbd> after an abbreviation replaces it with the corresponding expansion.  Refer to the usage information in the script file for details.
+[auto_argmatcher.lua](auto_argmatcher.lua) | Reads a config file and automatically creates argmatchers (completion generators) for specified programs by parsing their help text output.  Refer to the usage information in the script file for details.
+[autopull.lua](autopull.lua) | Periodically runs `git pull` in a configurable list of directories.  Refer to the usage information in the script file for details.
+[codepoints_hinter.lua](codepoints_hinter.lua) | Can display a hint showing the Unicode codepoints for the non-ASCII character at the cursor position.  Run `clink set codepoints.show_preview true` to enable it.  If not already bound to something else, <kbd>Alt</kbd>-<kbd>F1</kbd> toggles immediate display of codepoints, even if the `codepoints.show_preview` setting is false (the <kbd>Alt</kbd>-<kbd>F1</kbd> key binding requires Clink v1.7.5 or newer).  Refer to the usage information in the script file for details.
+[cwdhistory.lua](cwdhistory.lua) | Adds cwd history that is saved between sessions.  Use <kbd>Alt</kbd>-<kbd>Ctrl</kbd>-<kbd>PgUp</kbd> to show the cwd history popup list.  Refer to the usage information in the script file for details.
+[divider.lua](divider.lua) | Automatically prints a divider line before and after running certain commands.  The list of commands is configurable.  Refer to the usage information in the script file for details.
+[doskey_hinter.lua](doskey_hinter.lua) | Can display a hint showing the definition of the doskey alias at the cursor position.  Run `clink set doskey.show_preview true` to enable it.  Refer to the usage information in the script file for details.
+[doskey_popup.lua](doskey_popup.lua) | Use <kbd>Ctrl</kbd>-<kbd>X</kbd>,<kbd>D</kbd> to show a list of doskey aliases and their expansions.  Refer to the usage information in the script file for details.
+[fuzzy_history.lua](fuzzy_history.lua) | Adds an autosuggest strategy `fuzzy_history` which can ignore path or file extension when providing suggestions from the command history list.  Refer to the usage information in the script file for details.
+[fzf.lua](fzf.lua) | Adds support for using [fzf](https://github.com/junegunn/fzf) with Clink.  Refer to the usage information in the script file for how to activate key bindings.  (This is the script from the [clink-fzf](https://github.com/chrisant996/clink-fzf) repo.)
+[highlight_envvars.lua](highlight_envvars.lua) | Can highlight environment variables in the command line, and/or can display a hint showing the value of the environment variable at the cursor.  Use <code>clink set color.envvars <em>your color here</em></code> to set a color (it only highlights them if a color is set).  Use <code>clink set highlight_envvars.show_preview true` to enable the display hint.
+[history_labels.lua](history_labels.lua) | Can automatically switch to a different history file based on the current directory.  Refer to the usage information in the script file for how to configure directories and history files.
+[i.lua](i.lua) | Adds an `i {dir} {command}` command that changes to _{dir}_, runs _{command}_, and changes back to the original directory.  Refer to the usage information in the script file for details and other features.
+[luaexec.lua](luaexec.lua) | Some handy debugging aids to use with Clink Lua scripts.  Refer to the usage information in the script file for details.
+[matchicons.lua](matchicons.lua) | Can show nerd font icons in file and directory completions.  Run `clink set matchicons.enable true` to enable it.  Refer to the usage information in the script file for details.
+[noclink.lua](noclink.lua) | This and the [noclink.cmd](noclink.cmd) script let you temporarily disable/reenable Clink (or Clink's prompt filtering).  Run `noclink -?` for help.
+[scmapi.lua](scmapi.lua) | Allows other scripts to automatically add support for other source control systems into [Clink's Lua `git` APIs](https://chrisant996.github.io/clink/clink.html#git).
+[scmhg.lua](scmhg.lua) | Uses scmapi.lua to add support for `hg` ([Mercurial](https://www.mercurial-scm.org/)).  Disabled by default; refer to the usage info in the script for how to enable it.
+[scmsvn.lua](scmsvn.lua) | Uses scmapi.lua to add support for `svn` ([Subversion](https://subversion.apache.org/)).  Disabled by default; refer to the usage info in the script for how to enable it.
+[show_tips.lua](show_tips.lua) | Shows a tip about Clink each time Clink is injected.
+[tilde_autoexpand.lua](tilde_autoexpand.lua) | Automatically expands tildes into the user's home directory (disabled by default; see usage information in the script file for how to enable it).
+[toggle_short.lua](toggle_short.lua) | Adds a command to toggle the word under the cursor between long and short path names.  The default key binding is <kbd>Ctrl</kbd>-<kbd>Alt</kbd>-<kbd>A</kbd>.
+[vscode_shell_integration.lua](vscode_shell_integration.lua) | Automatically enables shell integration for VSCode embedded terminal windows.
+[web_search.lua](web_search.lua) | Shortcuts for searching popular search engines from the command line.  Run `web_search --list` for a list of available shortcuts.  Refer to the usage information in the script file for details.
+[z_dir_popup.lua](z_dir_popup.lua) | If you use [z.lua](https://github.com/skywind3000/z.lua) then this provides a popup listing of directories from z.  See usage information in the script file for details.
+[zoxide_dir_popup.lua](zoxide_dir_popup.lua) | If you use [zoxide](https://github.com/ajeetdsouza/zoxide) then this provides a popup listing of directories from zoxide.  See usage information in the script file for details.
+
+# Setting up FZF
+
+Clink-gizmos includes clink-fzf, which provides optional integration with the [FZF](https://github.com/junegunn/fzf) fuzzy finder tool for filtering completions, directories, history, etc.
+
+To set up FZF integration, refer to the README at [clink-fzf](https://github.com/chrisant996/clink-fzf).
+
+You can also include file icons in fzf completion lists, if you use Clink v1.6.5 or newer and [DirX](https://github.com/chrisant996/dirx) v0.9 or newer and configure a few FZF environment variables.  See [Icons in FZF](https://github.com/chrisant996/clink-fzf/#icons-in-fzf) for details.
+
+<a name="matchicons"></a>
+
+# Setting up Icons in File Completions
+
+If you're using a [Nerd Font](https://nerdfonts.com), then you can run `clink set matchicons.enable true` to enable showing file icons for file and directory completions.  And some other kinds of completions may also add icons (for example the git completions in [clink-completions](https://github.com/vladimir-kotikov/clink-completions) can show icons for git branches and git tags, etc).
+
+If you're not using a Nerd Font yet, consider checking out some of the available fonts.  Here are a few recommended ones for shell windows or file editors:
+- [Meslo Nerd Font patched by romkatv](https://github.com/romkatv/powerlevel10k/blob/master/font.md):  this is a patched version of Meslo Nerd Font.
+- [Caskaydia Cove Nerd Font](https://github.com/ryanoasis/nerd-fonts/releases/):  this is a patched version of Cascadia Code that adds many icon characters.
+- [FiraCode Nerd Font](https://github.com/ryanoasis/nerd-fonts/releases/):  this is a patched version of Fira Code that adds Powerline symbols and many icon characters.
+- [RobotoMono Nerd Font](https://github.com/ryanoasis/nerd-fonts/releases/):  this is a patched version of Roboto Mono that adds Powerline symbols and many icon characters.
+- And there are many other fonts to have fun with -- enjoy!
+
+> [!TIP]
+> If some of the icons look wrong, you might be using an older "v2" nerd font.  In that case, you can set the environment variable `DIRX_NERD_FONTS_VERSION=2` to tell matchicons.lua to use icons compatible with "v2" nerd fonts.
+>
+> For example by adding `set DIRX_NERD_FONTS_VERSION=2` into a startup .bat or .cmd script, or using Windows Settings to set the environment variable.
+
+# Rough Prototype Features
+
+Some of the included scripts are rough prototypes that can be useful, but are not fully functional and/or have potentially significant or dangerous limitations.  These prototype scripts are **disabled by default**, for safety and to avoid interference.  See below for information about each, and for how to enable each script if you wish.
+
+## [direnv.lua](direnv.lua)
+
+_Disabled by default, for security reasons.  To enable it, run `clink set direnv.enable true`._
+
+This is conceptually similar to the direnv tool from https://direnv.net and
+https://github.com/direnv/direnv, but is designed for use with Clink.
+
+The idea is that when changing current directories from one command prompt to
+the next, this script looks for a .env file or .env.cmd file.  If it finds one
+then it applies environment variables from it to the current environment.
+When changing away to a different directory, then it unsets any environment
+variables that were applied from the most recent .env or .env.cmd file.
+
+By default, direnv starts out disabled and does nothing at all.  To enable
+it, run `clink set direnv.enable true`.  Once enabled, it only works in
+directories it's been told to trust.
+
+By default, direnv starts out with no trust.  It only loads environment
+variables from specific .env or .env.cmd files that have been explicitly
+allowed.  Run `direnv allow directory_name` to tell direnv to allow the .env or
+.env.cmd file in a specific directory, or run `direnv allow path\.env` or
+`direnv allow path\.env.cmd` to allow a specific .env or .env.cmd file.
+
+The format for a .env file is one variable definition per line, and each
+variable definition is a name, an equal sign, and a value.  For example:
+  VAR_NAME=VALUE
+
+The format for a .env.cmd file is a normal batch script, but the script is
+executed in a separate hidden CMD session.  Any environment variable changes
+are copied from the hidden CMD into the current CMD session.
+
+For more information, including a list of available direnv commands, run
+`direnv help`.
+
+The following Clink settings control how this script functions:
+
+Setting | Default | Description
+-|-|-
+`direnv.enable` | `false` | This script is disabled by default.  Run `clink set direnv.enable true` to enable this script.
+`direnv.banner` | `true` | By default direnv shows feedback before the prompt when loading or unloading a .env or .env.cmd file for a directory.  Run `clink set direnv.banner false` to disable the feedback.
+`direnv.hide_env_diff` | `false` | Hides feedback about env changes.
+`color.direnv_banner` | dark yellow | The color to use for feedback when loading or unloading a .env or .env.cmd file.
+
+## [fishcomplete.lua](fishcomplete.lua)
+
+_Disabled by default.  To enable it, run `clink set fishcomplete.enable true`._
+
+When a command is typed and it does not have an argmatcher, then fishcomplete automatically checks if there is a .fish file by the same name in the same
+directory as the command program or in an "autocomplete" or "complete" directory below that.  If yes, then it attempts to parse the .fish file and create a Clink argmatcher from it.
+
+You can configure an additional directory containing *.fish completion files by running `clink set fishcomplete.completions_dir` with a directory name.
+This directory is searched last, if a .fish script isn't found by the default search strategy.
+
+The following Clink settings control how this script functions:
+
+Setting | Default | Description
+-|-|-
+`fishcomplete.enable` | `false` | This script is disabled by default.  Run `clink set fishcomplete.enable true` to enable this script.
+`fishcomplete.banner` | `true` | By default fishcomplete shows feedback at the top of screen when loading *.fish completion files.  Run `clink set fishcomplete.banner false` to disable the feedback.
+`fishcomplete.completions_dir` | none | An additional directory to search for *.fish completion files.  Run `clink set fishcomplete.completions_dir` to configure it.
+
+> [!NOTE]
+> The fishcomplete script does not yet handle the `-e` or `-w` flags for the fish `complete` command.  It attempts to handle simple fish completion scripts, but it will likely malfunction with more sophisticated fish completion scripts.
+> It cannot handle the fish scripting language, apart from the "complete" command itself.
+
+## [command_substitution.lua](command_substitution.lua)
+
+_Disabled by default.  To enable it, set the global variable `clink_gizmos_command_substitution = true` in one of your Lua scripts that gets loaded before the clink-gizmos directory._
+
+This simulates very simplistic command substitutions similar to bash.  Any `$(command)` in a command line is replaced by the output from running the specified command.
+
+For example, `echo $(date /t & time /t)` first runs the command `date /t & time /t` and replaces the `$(...)` with the output from the command.  Since the output is the current date and the current time, after command substitution the command line becomes something like `echo Sat 07/09/2022  11:08 PM`, and then finally the resulting command is executed.
+
+The following global configuration variables in Lua control how this script functions:
+
+Variable | Value | Description
+-|-|-
+`clink_gizmos_command_substitution` | `true` or `false` | Set this global variable to true to enable this script.  This script is disabled by default.
+
+> [!CAUTION]
+> This is a very simple and stupid implementation, and it does not (and cannot) work the same as bash.  It will not work quite as expected in many cases.  But if the limitations are understood and respected, then it can still be useful and powerful.
+
+Here are some of the limitations:
+
+- WHETHER a command substitution runs is different than in bash!
+- The ORDER in which command substitutions run is different than in bash!
+- Only a small subset of the bash syntax is supported.
+- Nested substitutions are not supported; neither nested via typing nor nested via substitution.
+- This spawns new cmd shells to invoke commands.  This means commands cannot affect the current shell's state:  changing env vars or cwd or etc do not affect the current shell.
+- Newlines and tab characters in the output are replaced with spaces before substitution into the command line.
+- CMD does not support command lines longer than a total length of about 8,000 characters.
+
+Bash intelligently skips command substitutions that don't need to be performed, for example in an `else` clause that is not reached.  But this script stupidly ALWAYS performs ALL command substitutions no matter whether CMD will actually reach processing that part of the command line.
+
+Bash intelligently performs command substitutions in the correct order with respect to other parts of the command line that precede or follow the command substitutions.  But this script stupidly performs ALL command substitutions BEFORE any other processing happens.  That means command substitutions can't successfully refer to or use outputs from earlier parts of the command line; because this script does not understand the rest of the command line and doesn't evaluate things in the right order.

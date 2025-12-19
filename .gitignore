@@ -2,3 +2,5 @@
 /profile/clink_errorlevel_*.txt
 /profile/clink_history*
 /~*.old
+profile/cwd_history
+profile/.seen_tips

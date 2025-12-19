@@ -48,6 +48,10 @@ color.comment_row = sgr 38;5;87;48;5;18
 # type: color
 color.description = sgr 38;5;39
 
+# name: Color for direnv banner messages
+# type: color
+color.direnv_banner = sgr 0;3;38;5;136
+
 # name: Doskey completions
 # type: color
 color.doskey = sgr 1;38;5;75
@@ -107,6 +111,14 @@ color.selection = sgr 38;5;16;48;5;179
 # name: Color for suggestion text
 # type: color
 color.suggestion = sgr 38;5;239
+
+# name: Color for transient divider line
+# type: color
+color.transient_divider_line = sgr 38;5;240
+
+# name: Color for duration text in transient line
+# type: color
+color.transient_divider_text = sgr 38;5;214
 
 # name: Unexpected argument color
 # type: color
