@@ -23,7 +23,7 @@ This is a "backup" of my current WT settings. Feel free to use it but YMMV and I
 2. Install all fonts from `fonts` folder and use it in Windows Terminal
 3. Install required dependencies using the script (or manually if you don't use `choco`):
 ```shell
-$ choco install fzf eza ripgrep jq
+$ choco install fzf fd eza ripgrep jq
 ```
 4. Setup Windows Terminal task: 
 

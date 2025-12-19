@@ -19,8 +19,9 @@ set HOME=%USERPROFILE%
 
 :: Extra env vars
 
-::   use ripgrep instead of dir for fzf (faster)
-set FZF_CTRL_T_COMMAND=rg --files --hidden --follow --glob "!.git"
+:: Configure fzf to use fd (faster than ripgrep and default)
+set FZF_CTRL_T_COMMAND=fd --hidden --follow --exclude ".git"
+set FZF_ALT_C_COMMAND=fd --type d --hidden --follow --exclude ".git" --exclude "node_modules"
 
 :: Add aliases
 doskey /macrofile="%CLINK_DIR%\aliases"
