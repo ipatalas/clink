@@ -12,21 +12,41 @@ if ((clink and clink.version_encoded) or 0) < 10020010 then
     return
 end
 
+settings.add(
+    "flexprompt.enable",
+    true,
+    "Enable flexprompt.",
+    "Setting this to false disables the flexprompt prompt filter.\n" ..
+    "Takes effect on the next Clink session.")
+
+if not settings.get("flexprompt.enable") then
+    log.info("Flexprompt is disabled by the 'flexprompt.enable' setting.")
+    return
+end
+
 --------------------------------------------------------------------------------
 -- Internals.
 
 -- luacheck: no max line length
--- luacheck: globals console io.popenyield os.geterrorlevel os.isfile string.equalsi _error_handler NONL
+-- luacheck: globals console io os unicode
+-- luacheck: globals string.equalsi string.matchlen
+-- luacheck: globals _error_handler NONL
 -- luacheck: globals flexprompt
 -- luacheck: globals CMDER_SESSION prompt_includeVersionControl
 
 flexprompt = flexprompt or {}
 flexprompt.settings = flexprompt.settings or {}
 flexprompt.settings.symbols = flexprompt.settings.symbols or {}
+flexprompt.defaultargs = flexprompt.defaultargs or {}
 local modules = {}
+local scms = {}
+local vpns = {}
 
 -- Is reset to {} at each onbeginedit.
 local _cached_state = {}
+
+-- Check if Clink natively supporting prompt spacing.
+local clink_prompt_spacing = (settings.get("prompt.spacing") ~= nil)
 
 --------------------------------------------------------------------------------
 -- Color codes.
@@ -140,12 +160,14 @@ flexprompt.choices.prompts =
     lean        = { left = { "{battery}{histlabel}{cwd}{git}{duration}{time}" }, both = { "{battery}{histlabel}{cwd}{git}", "{exit}{duration}{time}" } },
     classic     = { left = { "{battery}{histlabel}{cwd}{git}{exit}{duration}{time}" }, both = { "{battery}{histlabel}{cwd}{git}", "{exit}{duration}{time}" } },
     rainbow     = { left = { "{battery:breakright}{histlabel}{cwd}{git}{exit}{duration}{time:dim}" }, both = { "{battery:breakright}{histlabel}{cwd}{git}", "{exit}{duration}{time}" } },
+    breaks      = { left = { "{battery:breakright}{histlabel}{cwd}{break}{git}{break}{exit}{duration}{break}{time:dim}" }, both = { "{battery}{break}{histlabel}{cwd}{break}{git}", "{exit}{duration}{break}{time}" } },
 }
 
 -- Only if style != lean.
 flexprompt.choices.ascii_caps =
 {
                 --  Open    Close
+    none        = { "",     ""      },
     flat        = { "",     "",     separators="bar" },
 }
 
@@ -153,6 +175,7 @@ flexprompt.choices.ascii_caps =
 flexprompt.choices.caps =
 {
                 --  Open    Close
+    none        = { "",     ""      },
     flat        = { "",     ""      },
     vertical    = { "",     ""      },  -- A separator when style == rainbow.
     pointed     = { "",    ""     },
@@ -256,7 +279,8 @@ flexprompt.choices.prompt_symbols =
 local symbols =
 {
     branch          = {         powerline="" },
-    unpublished     = {         powerline="" },
+    unpublished     = {         nerdfonts2={""," "}, nerdfonts3={""," "} },
+    submodule       = {         nerdfonts2={""," "}, nerdfonts3={""," "} },
 
     conflict        = { "!" },
     addcount        = { "+" },
@@ -271,19 +295,29 @@ local symbols =
     staged          = { "#",    unicode="↗" },
 
     battery         = { "%" },
-    charging        = { "++",   powerline="" },
+    charging        = { "++",   nerdfonts2={""," "}, nerdfonts3={""," "} },
+    smartcharging   = { "%",    unicode="♥" },
 
-    exit_zero       = {         powerline="\x1b[92m\002" },
-    exit_nonzero    = {         powerline="\x1b[91m\002" },
+                                -- Note: coloremoji for exit_zero requires Clink v1.4.28 or higher.
+    exit_zero       = {         coloremoji="✔️", nerdfonts2={"\x1b[92m\002","\x1b[92m \002"}, nerdfonts3={"\x1b[92m\002","\x1b[92m \002"} },
+    exit_nonzero    = {         coloremoji="❌", nerdfonts2={"\x1b[91m\002","\x1b[91m \002"}, nerdfonts3={"\x1b[91m\002","\x1b[91m \002"} },
 
     prompt          = { ">" },
-    overtype_prompt = { "►" },
+    overtype_prompt = { ">",    unicode="►" },
 
-    vpn             = {         powerline="" },
-    no_vpn          = {         powerline="" },
+    admin           = {         powerline="" },
+    no_admin        = {         nerdfonts2={""," "}, nerdfonts3={""," "} },
 
-    refresh         = {         unicode="" },  --   
+    vpn             = {         coloremoji="☁️", nerdfonts2={"",""}, nerdfonts3=" " },
+    no_vpn          = {         coloremoji="🌎", nerdfonts2={""," "}, nerdfonts3={""," "} },
+
+    refresh         = {         nerdfonts2={""," "}, nerdfonts3={""," "} },  --   
 }
+
+if ((clink.version_encoded) or 0) < 10040028 then
+    -- Remove the coloremoji for exit_zero if the Clink version is too low.
+    symbols.exit_zero.coloremoji = nil
+end
 
 --------------------------------------------------------------------------------
 -- Wizard state.
@@ -291,8 +325,10 @@ local symbols =
 local _wizard
 
 local function get_errorlevel()
-    if _wizard then return _wizard.exit or 0 end
-    return os.geterrorlevel()
+    if os.geterrorlevel and settings.get("cmd.get_errorlevel") then
+        if _wizard then return _wizard.exit or 0 end
+        return os.geterrorlevel()
+    end
 end
 
 --------------------------------------------------------------------------------
@@ -300,12 +336,167 @@ end
 
 local pad_right_edge = " "
 
-local function sgr(args)
-    if args then
-        return "\x1b["..tostring(args).."m"
-    else
+local function sgr(code)
+    if not code then
         return "\x1b[m"
+    elseif string.byte(code) == 0x1b then
+        return code
+    else
+        return "\x1b["..code.."m"
     end
+end
+
+local getcolortable = console.getcolortable
+if not getcolortable then
+    getcolortable = function()
+        return {
+            "#0c0c0c", "#0037da", "#13a10e", "#3a96dd",
+            "#c50f1f", "#881798", "#c19c00", "#cccccc",
+            "#767676", "#3b78ff", "#16c60c", "#61d6d6",
+            "#e74856", "#b4009e", "#f9f1a5", "#f2f2f2",
+            foreground=8, background=1, default=true,
+        }
+    end
+end
+
+local ansi_to_vga =
+{
+    0,  4,  2,  6,  1,  5,  3,  7,
+    8, 12, 10, 14,  9, 13, 11, 15,
+}
+
+local function rgb_from_colortable(num)
+    num = num and ansi_to_vga[num + 1]
+    if not num then
+        return
+    end
+    local colortable = getcolortable()
+    if not colortable or not colortable[num + 1] then
+        return
+    end
+    local r, g, b = colortable[num + 1]:match("^#(%x%x)(%x%x)(%x%x)$")
+    if not r or not g or not b then
+        return
+    end
+    r = tonumber(r, 16)
+    g = tonumber(g, 16)
+    b = tonumber(b, 16)
+    return r, g, b
+end
+
+local cube_series = { 0x00, 0x5f, 0x87, 0xaf, 0xd7, 0xff }
+local function rgb_from_color(inner)
+    local pro, r, g, b, epi = inner:match("^([34]8;2;)(%d+);(%d+);(%d+)(.*)$")
+    if pro and r and g and b and epi then
+        return pro, r, g, b, epi
+    end
+    local cube
+    pro, cube, epi = inner:match("^([34]8;5;)(%d+)(.*)$") -- luacheck: no unused
+    if cube then
+        cube = tonumber(cube)
+        if cube < 0 or cube > 255 then
+            return
+        elseif cube <= 15 then
+            cube = cube
+            r, g, b = rgb_from_colortable(cube)
+            if not r or not g or not b then
+                return
+            end
+        elseif cube >= 232 and cube <= 255 then
+            r = 8 + ((cube - 232) * 10)
+            g = r
+            b = r
+        else
+            cube = cube - 16
+            r = math.floor(cube / 36)
+            cube = cube - r * 36
+            g = math.floor(cube / 6)
+            cube = cube - g * 6
+            b = cube
+            r = cube_series[r + 1]
+            g = cube_series[g + 1]
+            b = cube_series[b + 1]
+        end
+        pro = inner:sub(1, 1).."8;2;"
+        return pro, r, g, b, epi
+    end
+    local n = 0
+    local bold = false
+    local tag = 0
+    epi = ""
+    for i = 1, #inner + 1 do
+        local x = inner:byte(i)
+        if x == 0x3b or not x then
+            if n == 1 then
+                bold = true
+            elseif (n >= 30 and n <= 37) or
+                    (n >= 40 and n <= 47) or
+                    (n >= 90 and n <= 97) or
+                    (n >= 100 and n <= 107) or
+                    n == 39 or n == 49 then
+                if tag == 0 then
+                    tag = n
+                end
+            else
+                if #epi > 0 then
+                    epi = epi..";"
+                end
+                epi = epi..tostring(n)
+            end
+            if not x then
+                break
+            end
+            n = 0
+        elseif x >= 0x30 and x <= 0x39 then
+            n = (n * 10) + (x - 0x30)
+        elseif x == 0x6d then
+            break
+        else
+            return
+        end
+    end
+    if tag == 0 then
+        tag = 39
+    end
+    if tag >= 90 then
+        bold = true
+        tag = tag - 60
+    end
+    local fore = (tag >= 30 and tag < 40)
+    tag = math.fmod(tag, 10) + (bold and 8 or 0)
+    r, g, b = rgb_from_colortable(tag)
+    if not r or not g or not b then
+        return
+    end
+    return (fore and "38;2;" or "48;2;"), r, g, b, epi
+end
+
+local function blend_color(code1, code2, opacity1)
+    opacity1 = opacity1 or 0.5
+    if opacity1 < 0 or opacity1 > 1 then
+        return
+    end
+    local inner1 = code1:match("^\x1b%[(.*)m$") or code1
+    local inner2 = code2:match("^\x1b%[(.*)m$") or code2
+    if inner1:find("\x1b") or inner2:find("\x1b") then
+        return
+    end
+    local pro1, r1, g1, b1, epi1 = rgb_from_color(inner1)
+    if not pro1 or not r1 or not g1 or not b1 then
+        return
+    end
+    local _, r2, g2, b2 = rgb_from_color(inner2)
+    if not r2 or not g2 or not b2 then
+        return
+    end
+    local r = math.floor((tonumber(r1) * opacity1) + (tonumber(r2) * (1 - opacity1)))
+    local g = math.floor((tonumber(g1) * opacity1) + (tonumber(g2) * (1 - opacity1)))
+    local b = math.floor((tonumber(b1) * opacity1) + (tonumber(b2) * (1 - opacity1)))
+    local ret = pro1..string.format("%u;%u;%u", r, g, b)..epi1
+    if inner1 ~= code1 then
+        ret = sgr(ret)
+    end
+    return ret
 end
 
 local _can_use_extended_colors = nil
@@ -354,9 +545,60 @@ local function get_charset()
     if not _charset then
         -- Indexing into the charsets table validates that the charset name is
         -- recognized.
-        _charset = flexprompt.choices.charsets[flexprompt.settings.charset or "unicode"] or "unicode"
+        if flexprompt.settings.no_graphics then
+            _charset = "ascii"
+        else
+            _charset = flexprompt.choices.charsets[flexprompt.settings.charset or "unicode"] or "unicode"
+        end
     end
     return _charset
+end
+
+local _nerdfonts_version
+local function get_nerdfonts_version()
+    if not _nerdfonts_version then
+        local ver
+        local t = type(flexprompt.settings.nerdfonts_version)
+        if t == "string" or t == "number" then
+            ver = tostring(flexprompt.settings.nerdfonts_version)
+            if ver == "" then
+                ver = nil
+            end
+        end
+        if not ver then
+            local env = os.getenv("FLEXPROMPT_NERDFONTS_VERSION")
+            if env then
+                local num = tonumber(env:gsub("^ +", ""))
+                if num then
+                    ver = tostring(num)
+                    if ver == "" then
+                        ver = nil
+                    end
+                end
+            end
+        end
+        if ver then
+            _nerdfonts_version = "nerdfonts" .. ver
+        end
+    end
+    return not flexprompt.settings.no_graphics and _nerdfonts_version or nil
+end
+
+local _nerdfonts_width
+local function get_nerdfonts_width()
+    if not _nerdfonts_width then
+        if flexprompt.settings.nerdfonts_width == 2 then
+            _nerdfonts_width = 2
+        else
+            local env = os.getenv("FLEXPROMPT_NERDFONTS_WIDTH")
+            if env and tonumber(env) == 2 then
+                _nerdfonts_width = 2
+            else
+                _nerdfonts_width = 1
+            end
+        end
+    end
+    return _nerdfonts_width
 end
 
 local function get_lines()
@@ -364,9 +606,13 @@ local function get_lines()
 end
 
 local function get_spacing()
-    -- Indexing into the spacing table validates that the spacing name is
-    -- recognized.
-    return flexprompt.choices.spacing[flexprompt.settings.spacing or "normal"] or "normal"
+    if clink_prompt_spacing then
+        return "normal"
+    else
+        -- Indexing into the spacing table validates that the spacing name is
+        -- recognized.
+        return flexprompt.choices.spacing[flexprompt.settings.spacing or "normal"] or "normal"
+    end
 end
 
 local function get_connector()
@@ -381,7 +627,11 @@ local function get_connector()
 end
 
 local function lookup_color(args)
-    if not args or type(args) == "table" then
+    if not args then
+        return args
+    end
+
+    if type(args) == "table" then
         return args[get_style()] or args
     end
 
@@ -449,25 +699,55 @@ local function get_frame_color()
     return frame_color
 end
 
+local function resolve_symbol_table(symbol)
+    if type(symbol) ~= "table" then
+        return symbol
+    else
+        local ret
+        if not flexprompt.settings.no_graphics then
+            local term = clink.getansihost and clink.getansihost() or nil
+            if flexprompt.settings.use_color_emoji and term == "winterminal" and symbol["coloremoji"] then
+                ret = symbol["coloremoji"]
+            elseif term and symbol[term] then
+                ret = symbol[term]
+            else
+                local nf = get_nerdfonts_version()
+                if symbol[nf] then
+                    symbol = symbol[nf]
+                    if type(symbol) == "table" then
+                        if get_nerdfonts_width() == 2 then
+                            ret = symbol[2] or symbol[1]
+                        else
+                            ret = symbol[1]
+                        end
+                    else
+                        ret = symbol
+                    end
+                elseif flexprompt.settings.powerline_font and symbol["powerline"] then
+                    ret = symbol["powerline"]
+                end
+            end
+        end
+        if not ret then
+            local charset = get_charset()
+            ret = symbol[charset] or symbol[1]
+        end
+        return ret
+    end
+end
+
 local function get_symbol(name, fallback)
     local settings_symbols = flexprompt.settings.symbols
     local symbol = settings_symbols and settings_symbols[name] or symbols[name] or fallback or ""
-    if type(symbol) == "table" then
-        local term = clink.getansihost and clink.getansihost() or nil
-        if term and symbol[term] then
-            symbol = symbol[term]
-        elseif flexprompt.settings.powerline_font and symbol["powerline"] then
-            symbol = symbol["powerline"]
-        else
-            local charset = get_charset()
-            symbol = symbol[charset] or symbol[1] or ""
-        end
+    symbol = resolve_symbol_table(symbol)
+    if not symbol then
+        symbol = resolve_symbol_table(symbols[name] or fallback or "")
     end
-    return symbol
+    return symbol or ""
 end
 
 local function get_icon(name)
-    if not flexprompt.settings.use_icons then return "" end
+    if flexprompt.settings.no_graphics or not flexprompt.settings.use_icons then return "" end
     if type(flexprompt.settings.use_icons) == "table" and not flexprompt.settings.use_icons[name] then return "" end
 
     return get_symbol(name)
@@ -477,13 +757,15 @@ local function get_prompt_symbol_color()
     local color
     if flexprompt.settings.prompt_symbol_color then
         color = flexprompt.settings.prompt_symbol_color
-    elseif os.geterrorlevel then
-        color = (get_errorlevel() == 0) and
-                (flexprompt.settings.exit_zero_color or "realbrightgreen") or
-                (flexprompt.settings.exit_nonzero_color or "realbrightred")
     else
-        color = "brightwhite"
+        local err = get_errorlevel()
+        if err then
+            color = (err == 0) and
+                    (flexprompt.settings.exit_zero_color or "realbrightgreen") or
+                    (flexprompt.settings.exit_nonzero_color or "realbrightred")
+        end
     end
+    color = color or "brightwhite"
     color = lookup_color(color)
     return sgr(get_best_fg(color))
 end
@@ -534,13 +816,17 @@ local function connect(lhs, rhs, frame, sgr_frame_color)
     local frame_len = console.cellcount(frame)
     local width = get_screen_width() - #pad_right_edge
     local gap = width - (lhs_len + rhs_len + frame_len)
+    local dropped
     if gap < 0 then
         gap = gap + rhs_len
         rhs_len = 0 -- luacheck: no unused
         rhs = ""
         if gap < 0 then
+            gap = gap + frame_len
+            frame_len = 0 -- luacheck: no unused
             frame = ""
         end
+        dropped = true
     end
     if gap > 0 then
         if not sgr_frame_color then
@@ -548,22 +834,31 @@ local function connect(lhs, rhs, frame, sgr_frame_color)
         end
         lhs = lhs .. sgr_frame_color .. string.rep(get_connector(), gap)
     end
-    return lhs..rhs..frame
+    return lhs..rhs..frame, dropped
 end
 
 local _refilter_modules
-local _module_results
+local _module_results = {}
 local function refilter_module(module)
     _refilter_modules = _refilter_modules or {}
     _refilter_modules[module] = true
 end
 
-local function reset_render_state()
+local function reset_render_state(keep_results)
     _can_use_extended_colors = nil
     _charset = nil
+    _nerdfonts_version = nil
+    _nerdfonts_width = nil
     _wizard = nil
     _refilter_modules = nil
-    _module_results = nil
+    if not keep_results then
+        _module_results = {}
+    end
+end
+
+local list_on_reset_render_state = {}
+local function add_on_reset_render_state(func)
+    table.insert(list_on_reset_render_state, func)
 end
 
 --------------------------------------------------------------------------------
@@ -571,7 +866,11 @@ end
 
 local function spairs(t, order)
     local keys = {}
-    for k in pairs(t) do keys[#keys+1] = k end
+    local num = 0
+    for k in pairs(t) do
+        num = num + 1
+        keys[num] = k
+    end
 
     if order then
         table.sort(keys, function(a,b) return order(t, a, b) end)
@@ -606,7 +905,7 @@ local function has_file(dir, file)
 end
 
 local function append_text(lhs, rhs)
-    if not lhs then return tostring(rhs) end
+    if not lhs then return rhs and tostring(rhs) or "" end
     if not rhs then return tostring(lhs) end
 
     lhs = tostring(lhs)
@@ -630,16 +929,25 @@ local function maybe_apply_tilde(dir, force)
     return dir
 end
 
+local function get_default_prompts()
+    local style = get_style()
+    local prompts = flexprompt.choices.prompts[style]["both"]
+    local left_prompt = prompts[1]
+    local right_prompt = prompts[2]
+    if flexprompt.default_prompt_append then
+        left_prompt = left_prompt .. (flexprompt.default_prompt_append.left_prompt or "")
+        right_prompt = (flexprompt.default_prompt_append.right_prompt or "") .. right_prompt
+    end
+    return left_prompt, right_prompt
+end
+
 local function is_module_in_prompt(name)
     local pattern = "{" .. name .. "[:}]"
     local top_prompt = flexprompt.settings.top_prompt
     local left_prompt = flexprompt.settings.left_prompt
     local right_prompt = flexprompt.settings.right_prompt
     if not top_prompt and not left_prompt and not right_prompt then
-        local style = get_style()
-        local prompts = flexprompt.choices.prompts[style]["both"]
-        left_prompt = prompts[1]
-        right_prompt = prompts[2]
+        left_prompt, right_prompt = get_default_prompts()
     end
 
     local is = 0
@@ -655,6 +963,136 @@ local function is_module_in_prompt(name)
     if is > 0 then
         return is
     end
+end
+
+local function unicode_normalize(s)
+    if unicode.normalize then
+        return unicode.normalize(3, s)
+    else
+        return s
+    end
+end
+
+local function first_letter(s)
+    if unicode.iter then
+        -- This handles combining marks, but does not yet handle ZWJ (0x200d)
+        -- such as in emoji sequences.
+        local letter = ""
+        for codepoint, value, combining in unicode.iter(s) do
+            if value == 0x200d then
+                break
+            elseif not combining and #letter > 0 then
+                break
+            end
+            letter = letter .. codepoint
+        end
+        return letter
+    else
+        return s:sub(1, 1)
+    end
+end
+
+local function abbrev_child(parent, child)
+    local letter = first_letter(child)
+    if not letter or letter == "" then
+        return child, false
+    end
+
+    local any = false
+    local lcd = 0
+    local dirs = os.globdirs(path.join(parent, letter .. "*"))
+    for _, x in ipairs(dirs) do
+        local m = string.matchlen(child, x)
+        if lcd < m then
+            lcd = m
+        end
+        any = true
+    end
+    lcd = (lcd >= 0) and lcd or 0
+
+    if not any then
+        return child, false
+    end
+
+    local abbr = child:sub(1, lcd) .. first_letter(child:sub(lcd + 1))
+    return abbr, abbr ~= child
+end
+
+local function abbrev_path(dir, fluent, all)
+    -- Removeable drives could be floppy disks or CD-ROMs, which are slow.
+    -- Network drives are slow.  Invalid drives are unknown.  If the drive
+    -- type might be slow then don't abbreviate.
+    local tilde, tilde_len = dir:find("^~[/\\]+")
+    local s, parent
+
+    local drivetype, parse
+    local drive = path.getdrive(dir) or ""
+    if tilde then
+        parent = os.getenv("HOME")
+        drive = path.getdrive(parent) or ""
+        drivetype = os.getdrivetype(drive)
+        s = "~"
+        parse = dir:sub(tilde_len + 1)
+    elseif drive ~= "" then
+        local seps
+        parent = drive
+        drivetype = os.getdrivetype(drive)
+        seps, parse = dir:match("^([/\\]*)(.*)$", #drive + 1)
+        s = drive
+        if #seps > 0 then
+            parent = parent .. "\\"
+            s = s .. "\\"
+        end
+    else
+        parent = os.getcwd()
+        drive = path.getdrive(parent) or ""
+        drivetype = os.getdrivetype(drive)
+        s = ""
+        parse = dir
+    end
+
+    if drivetype ~= "fixed" and drivetype ~= "ramdisk" then
+        return dir
+    end
+
+    local components = {}
+    while true do
+        local up, child = path.toparent(parse)
+        if #child > 0 then
+            table.insert(components, child .. "\\")
+        else
+            if #up > 0 then
+                table.insert(components, up)
+            end
+            break
+        end
+        parse = up
+    end
+
+    local first = #components
+    if tilde then
+        first = first - 1
+    end
+
+    for i = first, 1, -1 do
+        local child = components[i]
+        local this_dir = path.join(parent, child)
+        local special = not all and (i == 1 or i == #components or flexprompt.is_git_dir(this_dir))
+        if special then
+            s = path.join(s, child)
+        else
+            local text, abbreviated = abbrev_child(parent, child)
+            if abbreviated and fluent then
+                s = path.join(s, make_fluent_text(text, fluent))
+            else
+                s = path.join(s, text)
+            end
+        end
+        parent = this_dir
+    end
+
+    dir = s:gsub("[/\\]+$", "")
+    return dir
 end
 
 --------------------------------------------------------------------------------
@@ -687,6 +1125,42 @@ if clink.onaftercommand then
 
     clink.onaftercommand(insertmode_aftercommand)
 end
+
+--------------------------------------------------------------------------------
+-- Helpers for duration, exit code, and time.
+
+local duration_modules
+local endedit_time
+local last_duration
+local last_time
+
+-- Clink v1.2.30 has a fix for Lua's os.clock() implementation failing after the
+-- program has been running more than 24 days.  Without that fix, os.time() must
+-- be used instead, but the resulting duration can be off by up to +/- 1 second.
+local duration_clock = ((clink.version_encoded or 0) >= 10020030) and os.clock or os.time
+
+local function duration_onbeginedit()
+    last_duration = nil
+    duration_modules = nil
+    flexprompt.settings.force_duration = nil
+    if endedit_time then
+        local beginedit_time = duration_clock()
+        local elapsed = beginedit_time - endedit_time
+        if elapsed >= 0 then
+            last_duration = elapsed
+        end
+    end
+end
+
+local function duration_onendedit()
+    endedit_time = duration_clock()
+end
+
+local function time_onbeginedit()
+    last_time = nil
+end
+
+add_on_reset_render_state(time_onbeginedit)
 
 --------------------------------------------------------------------------------
 -- Segments.
@@ -800,10 +1274,8 @@ local function init_segmenter(side, frame_color)
 
             -- If specified separators not found, use it as a literal separator.
             local available_caps = (charset == "ascii") and flexprompt.choices.ascii_caps or flexprompt.choices.caps
-            if available_caps[sep_name] then
-                separators = available_caps[sep_name]
-                sep_index = (1 - side) + 1 -- Convert to an end cap index.
-            end
+            separators = available_caps[sep_name] or available_caps["none"]
+            sep_index = (1 - side) + 1 -- Convert to an end cap index.
 
             -- Set up altseparators, if available, for when bg == fg.
             altseparators = available_separators[sep_name]
@@ -825,6 +1297,19 @@ local function init_segmenter(side, frame_color)
             separators = sgr(flexprompt.colors.default.bg .. ";" .. get_best_fg(segmenter.frame_color[fc_frame])) .. connector
         else
             separators = resolve_color_codes(separators, "")
+        end
+
+        if separators and flexprompt.settings.no_graphics then
+            local t = separators
+            if type(t) ~= "table" then
+                t = { t }
+            end
+            for _, s in ipairs(t) do
+                if s:find("[\x01-\x1f\x80-\xff]") then
+                    separators = ""
+                    break
+                end
+            end
         end
 
         return separators
@@ -849,21 +1334,43 @@ local function color_segment_transition(color, symbol, close)
         end
     end
 
-    local get_seg_fg = swap and get_best_bg or get_best_fg
-    local get_seg_bg = swap and get_best_fg or get_best_bg
+    local primary = swap and color or segmenter.back_color
+    local secondary = swap and segmenter.back_color or color
+
+    local out
     if segmenter.style == "rainbow" then
         if get_best_bg(segmenter.back_color) == get_best_bg(color) and segmenter.altseparator then
-            return sgr(get_best_fg(segmenter.frame_color[fc_sep])) .. segmenter.altseparator
-        else
-            return sgr(get_seg_fg(segmenter.back_color) .. ";" .. get_seg_bg(color)) .. symbol
+            out = sgr(get_best_fg(segmenter.frame_color[fc_sep])) .. segmenter.altseparator
+        elseif not symbol:find("^\x1b") then
+            if primary == flexprompt.colors.default then
+                out = sgr(get_best_bg(primary) .. ";" .. get_best_fg(secondary) .. ";7") .. symbol .. sgr("27")
+            end
         end
-    else
-        return sgr(get_seg_bg(segmenter.back_color) .. ";" .. get_seg_fg(color)) .. symbol
     end
+
+    if not out then
+        if segmenter.style == "rainbow" then
+            out = sgr(get_best_fg(primary) .. ";" .. get_best_bg(secondary)) .. symbol
+        else
+            out = sgr(get_best_bg(primary) .. ";" .. get_best_fg(secondary)) .. symbol
+        end
+    end
+
+    if flexprompt.debug_logging then
+        log.info(string.format('transition "%s", close %d, side %d, ', out, close, segmenter.side))
+    end
+    return out
 end
 
-local function next_segment(text, color, rainbow_text_color)
+local function next_segment(text, color, rainbow_text_color, isbreak, pending_segment)
     local out = ""
+
+    if pending_segment then
+        out = next_segment(pending_segment.text, lookup_color(pending_segment.color), pending_segment.altcolor, pending_segment.isbreak)
+    end
+
+    local wasbreak = segmenter.isbreak
+    segmenter.isbreak = isbreak
 
     if not color then color = flexprompt.colors.red end
 
@@ -892,6 +1399,16 @@ local function next_segment(text, color, rainbow_text_color)
         end
     end
 
+    local override_style = segmenter.style
+    if segmenter.override_separator then
+        sep = segmenter.override_separator
+        transition_color = segmenter.frame_color[fc_back]
+        override_style = segmenter.override_style
+        segmenter.override_separator = nil
+        segmenter.override_back_color = nil
+        segmenter.override_style = nil
+    end
+
     local pad = (segmenter.style == "lean" -- Lean has no padding.
                  or text == "") -- Segment with empty string has no padding.
                  and "" or " "
@@ -903,7 +1420,30 @@ local function next_segment(text, color, rainbow_text_color)
         return out
     end
 
-    out = out .. color_segment_transition(transition_color, sep)
+    local override_back_color
+    if classic and text == "" then
+        local charset = get_charset()
+        local available_caps = (charset == "ascii") and flexprompt.choices.ascii_caps or flexprompt.choices.caps
+        local cap = available_caps[flexprompt.settings.separators]
+        if cap then
+            sep = cap[2 - segmenter.side]
+            override_style = "rainbow"
+            segmenter.override_separator = sep
+            segmenter.override_back_color = true
+            segmenter.override_style = override_style
+            transition_color = color
+            override_back_color = transition_color
+        end
+    end
+
+    if override_style then
+        local restore_style = segmenter.style
+        segmenter.style = override_style
+        out = out .. color_segment_transition(transition_color, sep)
+        segmenter.style = restore_style
+    else
+        out = out .. color_segment_transition(transition_color, sep)
+    end
     if fore then
         out = out .. sgr(back .. ";" .. fore)
     end
@@ -911,8 +1451,9 @@ local function next_segment(text, color, rainbow_text_color)
     -- A module with an empty string is a segment break.  When there's no
     -- separator, force a break by showing one connector character using the
     -- frame color.
-    if text == "" and sep == "" and (rainbow or classic) then
-        text = make_fluent_text(sgr(flexprompt.colors.default.bg .. ";" .. get_best_fg(segmenter.frame_color[fc_frame])) .. get_connector())
+    if text == "" and sep:gsub(" ", "") == "" then
+        local connector = get_connector()
+        text = make_fluent_text(sgr(flexprompt.colors.default.bg .. ";" .. get_best_fg(segmenter.frame_color[fc_frame])) .. connector)
     end
 
     -- Applying 'color' goes last so that the module can override other colors
@@ -930,13 +1471,22 @@ local function next_segment(text, color, rainbow_text_color)
     end
 
     out = out .. base_color
-    if pad ~= "" and not (classic and (sep == "" or sep == " ") and not segmenter.open_cap) then
+
+    -- Add leading pad character.  Except in classic style if two segments are
+    -- immediately adjacent; in that case it would look like double-padding.
+    if pad ~= "" and not (classic and not wasbreak and (sep == "" or sep == " ") and not segmenter.open_cap) then
         out = out .. pad
     end
 
-    out = out .. resolve_color_codes(text, base_color) .. pad
+    text = resolve_color_codes(text, base_color) .. pad
+    if flexprompt.debug_logging then
+        log.info(string.format('segment "%s", side %d', text, segmenter.side))
+    end
+    out = out .. text
 
-    if rainbow then
+    if override_back_color then
+        segmenter.back_color = override_back_color
+    elseif rainbow then
         segmenter.back_color = color
     elseif classic then
         segmenter.back_color = segmenter.frame_color[fc_back]
@@ -979,7 +1529,10 @@ local function promptcoroutine(func)
         if async then
             -- Create the prompt coroutine manager if needed.
             if not _cached_state.has_promptcoroutine then
-                clink.promptcoroutine(promptcoroutine_manager)
+                -- Passing "flexprompt" for the cookie (new in Clink v1.7.0)
+                -- enables other *.clinkprompt files to use flexprompt's
+                -- modules directly without any special integration code.
+                clink.promptcoroutine(promptcoroutine_manager, "flexprompt")
                 _cached_state.has_promptcoroutine = true
             end
         else
@@ -990,9 +1543,10 @@ local function promptcoroutine(func)
                 entry.func(false--[[async]])
             end)
 
-            -- Run the coroutine synchronously.
-            local max_iter = 25
-            for iteration = 1, max_iter + 1, 1 do
+            -- Run the coroutine synchronously.  Cap the duration when running
+            -- synchronously, in case it's poorly behaved.
+            local began = os.clock()
+            while true do
                 -- Pass false to let it know it is not async.
                 local result, _ = coroutine.resume(c)
                 if result then
@@ -1005,12 +1559,10 @@ local function promptcoroutine(func)
                     end
                     break
                 end
-                -- Cap iterations when running synchronously, in case it's
-                -- poorly behaved.
-                if iteration >= max_iter then
-                    -- Ideally this could print an error message about
-                    -- abandoning a misbehaving coroutine, but that would mess
-                    -- up the prompt and input line display.
+                -- Ideally this could print an error message when abandoning a
+                -- misbehaving coroutine, but that would mess up the prompt and
+                -- input line display.
+                if os.clock() - began > 10 then
                     break
                 end
             end
@@ -1040,28 +1592,81 @@ local function log_cost(tick, module)
     _module_costs[module] = cost
 end
 
-local function render_module(name, args)
+local function normalize_segment_table(t)
+    if t[1] then
+        return { text=t[1], color=t[2], altcolor=t[3], isbreak=t.isbreak, condense_callback=t.condense_callback }
+    elseif t.text then
+        return t
+    end
+end
+
+local function render_module(name, args, try_condense)
     local key = string.lower(name)
+    local results = _module_results[key]
+
+    if try_condense then
+        if results then
+            -- Don't modify the existing table; it needs to stay
+            -- unmodified so resizing the terminal wider can uncondense.
+            local ret = {}
+            for _, segment in ipairs(results) do
+                if segment.condense_callback then
+                    local s = segment.condense_callback()
+                    table.insert(ret, {
+                        text = s.text or segment.text,
+                        color = s.color or segment.color,
+                        altcolor = s.altcolor or segment.altcolor,
+                        isbreak = s.isbreak or segment.isbreak,
+                    })
+                else
+                    table.insert(ret, segment)
+                end
+            end
+            results = ret
+        end
+        return results
+    end
 
     if _refilter_modules and not _refilter_modules[key] then
-        local results = _module_results[key]
         if results then
-            return table.unpack(results)
+            return results
         end
     end
 
     local func = modules[key]
     if func then
-        _module_results = _module_results or {}
         local tick = os.clock()
-        local results = { func(args) }
+        local a, b, c = func(args)
         log_cost(tick, key)
+        if a == nil then
+            results = nil
+        elseif type(a) ~= "table" then
+            -- Not a table means func() returned up to 3 strings.
+            results = { { text=a, color=b, altcolor=c } }
+        elseif type(a[1]) ~= "table" then
+            -- A table with no nested tables means func() returned one segment,
+            -- but it could be in either of two different formats.
+            results = normalize_segment_table(a)
+            if results then
+                results = { results }
+            end
+        else
+            -- A table of tables means func() returned one or more segments,
+            -- but each could be in either of two different formats.
+            results = {}
+            for _, t in ipairs(a) do
+                table.insert(results, normalize_segment_table(t))
+            end
+            if #results == 0 then
+                results = nil
+            end
+        end
         _module_results[key] = results
-        return table.unpack(results)
+        return results
     end
 end
 
-local function render_modules(prompt, side, frame_color, anchors)
+local function render_modules(prompt, side, frame_color, condense, anchors)
     local out = ""
     local init = 1
 
@@ -1090,6 +1695,12 @@ local function render_modules(prompt, side, frame_color, anchors)
         end
     end
 
+    if flexprompt.debug_logging then
+        log.info('BEGIN render_modules')
+    end
+
+    local any_condense_callbacks
+    local pending_segment
     while true do
         local s,e,cap = string.find(prompt, "{([^}]*)}", init)
         if not s then
@@ -1124,27 +1735,26 @@ local function render_modules(prompt, side, frame_color, anchors)
         segmenter._current_module = name
 
         if name and #name > 0 then
-            local text,color,rainbow_text_color = render_module(name, args)
-            if text then
+            local results = render_module(name, args, condense)
+            if results then
                 if anchors then
                     -- Add 1 because the separator isn't added yet.
                     anchors[1] = console.cellcount(out) + 1
                 end
 
-                local segments
-                if type(text) ~= "table" then
-                    -- No table provided.
-                    segments = { { text, color, rainbow_text_color } }
-                elseif type(text[1]) ~= "table" then
-                    -- Table of non-tables provided.
-                    segments = { text }
-                else
-                    -- Table of tables provided.
-                    segments = text
-                end
-                for _,segment in pairs(segments) do
+                for _,segment in pairs(results) do
                     if segment then
-                        out = out .. next_segment(segment[1], lookup_color(segment[2]), segment[3])
+                        if segment.isbreak then
+                            if out ~= "" then
+                                pending_segment = segment
+                            end
+                        else
+                            out = out .. next_segment(segment.text, lookup_color(segment.color), segment.altcolor, segment.isbreak, pending_segment)
+                            pending_segment = nil
+                        end
+                        if segment.condense_callback then
+                            any_condense_callbacks = true
+                        end
                     end
                 end
             end
@@ -1153,29 +1763,33 @@ local function render_modules(prompt, side, frame_color, anchors)
         segmenter._current_module = nil
     end
 
-    out = out .. next_segment(nil, flexprompt.colors.default)
+    out = out .. next_segment(nil, flexprompt.colors.default, nil, nil)
 
     if anchors then
         anchors[2] = console.cellcount(out)
     end
 
-    return out
+    if flexprompt.debug_logging then
+        log.info('END render_modules')
+    end
+
+    return out, any_condense_callbacks
 end
 
-local function render_prompts(render_settings, need_anchors)
-    reset_render_state()
+local function render_prompts(render_settings, need_anchors, condense)
+    reset_render_state(condense)
 
     local old_settings = flexprompt.settings
     if render_settings then
         flexprompt.settings = render_settings
         if render_settings.wizard then
-            local width = console.getwidth()
-            reset_render_state()
+            reset_render_state(condense)
             _wizard = render_settings.wizard
-            _wizard.width = _wizard.width or (width - 8)
+            local screenwidth = _wizard.screenwidth or console.getwidth()
+            _wizard.width = _wizard.width or (screenwidth - 8)
             _wizard.prefix = ""
-            if _wizard.width < width then
-                _wizard.prefix = string.rep(" ", (width - _wizard.width) / 2)
+            if _wizard.width < screenwidth then
+                _wizard.prefix = string.rep(" ", (screenwidth - _wizard.width) / 2)
             end
         end
     end
@@ -1187,10 +1801,11 @@ local function render_prompts(render_settings, need_anchors)
     local left_prompt = flexprompt.settings.left_prompt
     local right_prompt = flexprompt.settings.right_prompt
     if not top_prompt and not left_prompt and not right_prompt then
-        local prompts = flexprompt.choices.prompts[style]["both"]
-        left_prompt = prompts[1]
-        right_prompt = prompts[2]
+        left_prompt, right_prompt = get_default_prompts()
     end
+
+    local can_condense = nil
+    local any_condense_callbacks
 
     local top = ""
     local left1 = "" -- luacheck: no unused
@@ -1213,13 +1828,18 @@ local function render_prompts(render_settings, need_anchors)
     -- Top -------------------------------------------------------------------
 
     if top_prompt then
-        top = render_modules(top_prompt, 0, frame_color)
+        local orig_style = flexprompt.settings.style
+        flexprompt.settings.style = flexprompt.settings.top_style or flexprompt.settings.style
+        top, any_condense_callbacks = render_modules(top_prompt, 0, frame_color, condense)
+        can_condense = can_condense or any_condense_callbacks
+        flexprompt.settings.style = orig_style
     end
 
     -- Line 1 ----------------------------------------------------------------
 
-    if true then
-        left1 = render_modules(left_prompt or "", 0, frame_color, anchors)
+    do
+        left1, any_condense_callbacks = render_modules(left_prompt or "", 0, frame_color, condense, anchors)
+        can_condense = can_condense or any_condense_callbacks
 
         if left_frame then
             if left1 ~= "" then
@@ -1236,7 +1856,8 @@ local function render_prompts(render_settings, need_anchors)
         end
 
         if right_prompt then
-            right1 = render_modules(right_prompt, 1, frame_color)
+            right1, any_condense_callbacks = render_modules(right_prompt, 1, frame_color, condense)
+            can_condense = can_condense or any_condense_callbacks
         end
 
         if right_frame then
@@ -1284,12 +1905,17 @@ local function render_prompts(render_settings, need_anchors)
     -- Combine segments ------------------------------------------------------
 
     local prompt = left1
+    local try_condense
     local rprompt
     local wizard_prefix = _wizard and _wizard.prefix or ""
+    local screen_width = get_screen_width()
 
     if lines == 1 then
-        prompt = wizard_prefix .. prompt
         rprompt = right1
+        if console.cellcount(prompt) + (rprompt and console.cellcount(rprompt) or 0) + 10 > screen_width then
+            try_condense = true
+        end
+        prompt = wizard_prefix .. prompt
     else
         rprompt = right2
         if right1 or right_frame then
@@ -1298,16 +1924,22 @@ local function render_prompts(render_settings, need_anchors)
                 if left1 and #left1 > 0 then left1 = left1 .. " " end
                 if right1 and #right1 > 0 then right1 = " " .. right1 end
             end
-            prompt = connect(left1 or "", right1 or "", rightframe1 or "", sgr_frame_color)
+            prompt, try_condense = connect((left1 or ""), right1 or "", rightframe1 or "", sgr_frame_color)
+        end
+        if console.cellcount(prompt) > screen_width then
+            try_condense = true
         end
         prompt = wizard_prefix .. prompt .. sgr() .. "\r\n" .. wizard_prefix .. left2
     end
 
     if #top > 0 then
-        prompt = top .. "\n" .. prompt
         if left_frame then
-            prompt = string.rep(" ", console.cellcount(left_frame .. pad_frame)) .. prompt
+            top = string.rep(" ", console.cellcount(left_frame[1] .. pad_frame)) .. top
         end
+        if console.cellcount(top) > screen_width then
+            try_condense = true
+        end
+        prompt = top .. "\n" .. prompt
     end
 
     if rprompt and #rprompt > 0 then
@@ -1335,11 +1967,18 @@ local function render_prompts(render_settings, need_anchors)
         end
     end
 
+    if try_condense and can_condense and not condense then
+        prompt, rprompt, anchors = render_prompts(render_settings, need_anchors, true--[[condense]])
+    end
     return prompt, rprompt, anchors
 end
 
-local function render_transient_prompt()
-    return get_prompt_symbol_color() .. get_transient_prompt_symbol() .. sgr() .. " "
+local function render_transient_prompt(wizard)
+    local s
+    _wizard = wizard
+    s = sgr() .. get_prompt_symbol_color() .. get_transient_prompt_symbol() .. sgr() .. " "
+    _wizard = nil
+    return s
 end
 
 function flexprompt.render_wizard(settings, need_anchors)
@@ -1374,37 +2013,68 @@ if CMDER_SESSION then
     prompt_includeVersionControl = false
 end
 
+local disable
+local function detect_disable()
+    disable = nil
+    if clink.getclinkprompt then
+        local name, _, _, dependson = clink.getclinkprompt()
+        disable = (name and name ~= "" and not dependson["flexprompt"])
+    end
+end
+
 local right
 
 function pf:filter(prompt) -- luacheck: no unused
+    detect_disable()
+    if disable then
+        return
+    end
     prompt, right = render_prompts()
+    if prompt then
+        prompt = sgr()..prompt
+    end
+    if right then
+        right = sgr()..right
+    end
     return prompt
 end
 
 function pf:rightfilter(prompt) -- luacheck: no unused
+    if disable then
+        return
+    end
     return right or "", continue_filtering
 end
 
 function pf:transientfilter(prompt) -- luacheck: no unused
+    detect_disable()
+    if disable then
+        return
+    end
     return render_transient_prompt()
 end
 
 function pf:transientrightfilter(prompt) -- luacheck: no unused
+    if disable then
+        return
+    end
     return "", continue_filtering
 end
 
 -- Capture the $+ dir stack depth if present at the beginning of PROMPT.
-local plus_capture = clink.promptfilter(1)
-function plus_capture:filter(prompt) -- luacheck: no unused
-    local plusBegin, plusEnd = prompt:find("^[+]+")
-    if plusBegin == nil then
-        plusBegin, plusEnd = prompt:find("[\n][+]+")
-        if plusBegin then
-            plusBegin = plusBegin + 1
+if not os.getpushddepth then
+    local plus_capture = clink.promptfilter(1)
+    function plus_capture:filter(prompt) -- luacheck: no unused
+        local plusBegin, plusEnd = prompt:find("^[+]+")
+        if plusBegin == nil then
+            plusBegin, plusEnd = prompt:find("[\n][+]+")
+            if plusBegin then
+                plusBegin = plusBegin + 1
+            end
         end
-    end
-    if plusBegin ~= nil then
-        _cached_state.dirStackDepth = prompt:sub(plusBegin, plusEnd)
+        if plusBegin ~= nil then
+            _cached_state.dirStackDepth = prompt:sub(plusBegin, plusEnd)
+        end
     end
 end
 
@@ -1414,8 +2084,15 @@ end
 local function spacing_onbeginedit()
     if get_spacing() ~= "normal" then
         local text
-        local line = console.getnumlines() - 1
         local up = 0
+        local line
+        if console.getcursorpos then
+            local _, y = console.getcursorpos()
+            if y then
+                line = y - 1
+            end
+        end
+        line = line or console.getnumlines() - 1
         while line > 0 do
             text = console.getlinetext(line)
             if not text or #text ~= 0 then
@@ -1439,8 +2116,37 @@ end
 -- The prompt text "{xyz:args}" would call xyz_render("args").
 -- The symbol is optional, and is the default symbol for the module.
 function flexprompt.add_module(name, func, symbol)
+    if name:find("[^%w]") then
+        error("invalid flexprompt module name '"..name.."'; module names may only contain alphabetic characters.")
+    end
     modules[string.lower(name)] = func
     symbols[name .. "_module"] = symbol
+end
+
+-- Add a source control management plugin.
+function flexprompt.register_scm(name, funcs, priority)
+    if type(name) ~= "string" then
+        error("arg #1 must be name of source control management system")
+    end
+    if type(funcs) ~= "table" then
+        error("arg #2 must be a table of functions")
+    elseif type(funcs.test) ~= "function" or type(funcs.info) ~= "function" then
+        error("arg #2 table must include 'test' and 'info' functions")
+    end
+    table.insert(scms, { type=name, test=funcs.test, info=funcs.info, prio=(priority or 50) })
+    table.sort(scms, function(a, b) return a.prio < b.prio end)
+end
+
+-- Add a VPN detector plugin.
+function flexprompt.register_vpn(name, func, priority)
+    if type(name) ~= "string" then
+        error("arg #1 must be name of VPN detector")
+    end
+    if type(func) ~= "function" then
+        error("arg #2 must be a function")
+    end
+    table.insert(vpns, { type=name, test=func, prio=(priority or 50) })
+    table.sort(vpns, function(a, b) return a.prio < b.prio end)
 end
 
 -- Add a named color.
@@ -1479,6 +2185,15 @@ flexprompt.get_frame = get_frame
 -- Function to get the prompt style.
 flexprompt.get_style = get_style
 
+-- Function to get the prompt line count.
+flexprompt.get_lines = get_lines
+
+-- Function to get the nerdfonts version (based on what the user has told us).
+flexprompt.get_nerdfonts_version = get_nerdfonts_version
+
+-- Function to get the nerdfonts width (based on what the user has told us).
+flexprompt.get_nerdfonts_width = get_nerdfonts_width
+
 -- Function to get the prompt flow.
 flexprompt.get_flow = get_flow
 
@@ -1505,18 +2220,44 @@ end
 
 -- Parse arg "abc:def=mno:xyz" for token "def" returns value "mno".
 function flexprompt.parse_arg_token(args, name, altname, include_colon)
-    if not args then
+    if not name then
         return
     end
 
-    args = ":" .. args .. (include_colon and "" or ":")
+    local defargs
+    if segmenter and flexprompt.defaultargs and segmenter._current_module then
+        -- First check for style-specific default args.
+        if segmenter.style then
+            defargs = flexprompt.defaultargs[segmenter._current_module.."|"..segmenter.style]
+        end
+        -- If not found, check for general default args.
+        if not defargs then
+            defargs = flexprompt.defaultargs[segmenter._current_module]
+        end
+    end
+
+    if not defargs and not args then
+        return
+    end
 
     local value
-    if name then
-        local pat = include_colon and "=(.*)" or "=([^:]*):"
+    local pat = include_colon and "=(.*)" or "=([^:]*):"
+
+    -- First try args specified in the prompt string.
+    if args then
+        args = ":" .. args .. (include_colon and "" or ":")
         value = string.match(args, ":" .. name .. pat)
         if not value and altname then
             value = string.match(args, ":" .. altname .. pat)
+        end
+    end
+
+    -- If not found try default args.
+    if not value and defargs then
+        defargs = ":" .. defargs .. (include_colon and "" or ":")
+        value = string.match(defargs, ":" .. name .. pat)
+        if not value and altname then
+            value = string.match(defargs, ":" .. altname .. pat)
         end
     end
 
@@ -1525,17 +2266,43 @@ end
 
 -- Parsing arg "abc:def=mno:xyz" for a keyword like "abc" or "xyz" returns true.
 function flexprompt.parse_arg_keyword(args, name, altname)
-    if not args then
+    if not name then
         return
     end
 
-    args = ":" .. args .. ":"
+    local defargs
+    if segmenter and flexprompt.defaultargs and segmenter._current_module then
+        -- First check for style-specific default args.
+        if segmenter.style then
+            defargs = flexprompt.defaultargs[segmenter._current_module.."|"..segmenter.style]
+        end
+        -- If not found, check for general default args.
+        if not defargs then
+            defargs = flexprompt.defaultargs[segmenter._current_module]
+        end
+    end
+
+    if not defargs and not args then
+        return
+    end
 
     local value
-    if name then
+
+    -- First try args specified in the prompt string.
+    if args then
+        args = ":" .. args .. ":"
         value = string.match(args, ":" .. name .. ":")
         if not value and altname then
             value = string.match(args, ":" .. altname .. ":")
+        end
+    end
+
+    -- If not found try default args.
+    if not value and defargs then
+        defargs = ":" .. defargs .. ":"
+        value = string.match(defargs, ":" .. name .. ":")
+        if not value and altname then
+            value = string.match(defargs, ":" .. altname .. ":")
         end
     end
 
@@ -1558,6 +2325,35 @@ function flexprompt.parse_colors(text, default, altdefault)
     return color, altcolor
 end
 
+-- Function that returns a table of modules that include the duration.
+function flexprompt.get_duration_modules()
+    local any
+    local m = {}
+    for k, v in pairs(duration_modules) do
+        any = true
+        m[k] = v
+    end
+    return any and m
+end
+
+-- Function that gets the duration of the last command.
+function flexprompt.get_duration()
+    local wizard = flexprompt.get_wizard_state()
+    if segmenter and segmenter._current_module then
+        duration_modules = duration_modules or {}
+        duration_modules[segmenter._current_module] = true
+    end
+    return wizard and wizard.duration or last_duration or 0
+end
+
+-- Function that gets the time for the prompt.
+function flexprompt.get_time()
+    if not last_time then
+        last_time = os.time()
+    end
+    return last_time
+end
+
 -- Function that takes (dir, force) and collapses HOME dir prefix into a tilde,
 -- if configured to do so (flexprompt.settings.use_home_tilde) or if force.
 -- Returns the directory and true or false indicating whether tilde was applied.
@@ -1566,9 +2362,20 @@ flexprompt.maybe_apply_tilde = maybe_apply_tilde
 -- Function that takes (text, force) and surrounds it with control codes to
 -- apply fluent coloring to the text.  If force is true, the fluent color is
 -- applied even when using the rainbow style.  If force is a string it's a named
--- color to use instead of the fluent color, and if force is a table and its fg
+-- color to use instead of the fluent color, and if force is a table its fg
 -- field is used instead of the fluent color.
 flexprompt.make_fluent_text = make_fluent_text
+
+-- Function that takes (dir, fluent) to abbreviate the path specified by the
+-- dir parameter.  Each directory name is abbreviated to the shortest string
+-- that uniquely distinguishes it from its sibling directories.  The first and
+-- last directory names in the path are never abbreviated.  And git repo root
+-- directories or workspace directories are never abbreviated.  If fluent is
+-- true, then abbreviated directory names are surrounded with control codes to
+-- apply fluent coloring (even when using the rainbow style).  If fluent is a
+-- string it's a named color to use instead of the fluent color, and if force
+-- is a table its fg field is used instead of the fluent color.
+flexprompt.abbrev_path = abbrev_path
 
 -- Function that takes (lhs, rhs) and appends them together with a space in
 -- between.  If either string is empty or nil, the other string is returned
@@ -1586,6 +2393,19 @@ flexprompt.is_module_in_prompt = is_module_in_prompt
 -- whenever a new prompt is begun (i.e. a new edit line is begun).
 flexprompt.refilter_module = refilter_module
 
+-- Function that resets all rendering state and forces rerunning all prompt
+-- modules the next time the prompt is filtered.
+function flexprompt.reset_render_state()
+    reset_render_state()
+    for _, func in ipairs(list_on_reset_render_state) do
+        func()
+    end
+end
+
+function flexprompt.on_reset_render_state(func)
+    add_on_reset_render_state(func)
+end
+
 -- Function to check whether extended colors are available (256 color and 24 bit
 -- color codes).
 flexprompt.can_use_extended_colors = can_use_extended_colors
@@ -1600,24 +2420,31 @@ flexprompt.get_symbol = get_symbol
 -- Function to get customizable symbol for current module (only gets the symbol
 -- if flexprompt.settings.use_icons is true).
 function flexprompt.get_module_symbol(refreshing)
-    local s = ""
+    local s
     if segmenter and segmenter._current_module then
         local name = segmenter._current_module .. "_module"
         s = flexprompt.get_icon(name)
     end
-    if refreshing and s and s ~= "" then
+    if refreshing and s ~= "" then
         local ref_sym = flexprompt.get_icon("refresh")
         if ref_sym and ref_sym ~= "" then
-            s = ref_sym
+            local s_cells = console.cellcount(s)
+            local r_cells = console.cellcount(ref_sym)
+            local padding = (s_cells > r_cells) and string.rep(" ", s_cells - r_cells) or ""
+            s = ref_sym .. padding
         end
     end
-    return s
+    return s or ""
 end
 
 -- Function to retrieve a string of "+" corresponding to the pushd stack depth
 -- if %PROMPT% begins with "$+".
 function flexprompt.get_dir_stack_depth()
-    return _cached_state.dirStackDepth or ""
+    if os.getpushddepth then
+        return string.rep("+", os.getpushddepth())
+    else
+        return _cached_state.dirStackDepth or ""
+    end
 end
 
 -- Function that takes (dir, subdir) and returns "dir\subdir" if the subdir
@@ -1649,25 +2476,30 @@ function flexprompt.scan_upwards(dir, scan_func)
 end
 
 -- Function to format a version control branch name:
--- "on module_symbol branch_symbol branch"
+-- "on module_symbol submodule_symbol branch_symbol branch"
 --  - The "on" is present when flow is fluent.
 --  - The module_symbol is present when using icons and the module has a symbol.
+--  - The submodule_symbol is present when using icons and in a submodule.
 --  - The branch_symbol is present when not lean and not fluent, or when using
 --    icons (the icon_name argument is optional, and defaults to "branch").
 --  - The branch name is always present.
-function flexprompt.format_branch_name(branch, icon_name, refreshing)
+function flexprompt.format_branch_name(branch, icon_name, refreshing, submodule, module_icon)
     local style = get_style()
     local flow = get_flow()
 
-    local text
+    local text = branch
 
     if style == "lean" or flow == "fluent" then
-        text = append_text(flexprompt.get_icon(icon_name or "branch"), branch)
+        text = append_text(flexprompt.get_icon(icon_name or "branch"), text)
     else
-        text = append_text(flexprompt.get_symbol(icon_name or "branch"), branch)
+        text = append_text(flexprompt.get_symbol(icon_name or "branch"), text)
     end
 
-    text = append_text(flexprompt.get_module_symbol(refreshing), text)
+    if submodule then
+        text = append_text(flexprompt.get_symbol("submodule"), text)
+    end
+
+    text = append_text(module_icon or flexprompt.get_module_symbol(refreshing), text)
 
     if flow == "fluent" then
         text = append_text(flexprompt.make_fluent_text("on"), text)
@@ -1675,6 +2507,107 @@ function flexprompt.format_branch_name(branch, icon_name, refreshing)
 
     return text
 end
+
+-- Function to check whether flexprompt.settings.no_smart_cwd should disable
+-- smart cwd behavior for the specified directory.
+function flexprompt.is_no_smart_cwd(dir)
+    if flexprompt.settings.no_smart_cwd then
+        if type(flexprompt.settings.no_smart_cwd) ~= "table" then
+            return true
+        else
+            dir = clink.lower(path.normalise(path.join(unicode_normalize(dir), "")))
+            for _, value in ipairs(flexprompt.settings.no_smart_cwd) do
+                if type(value) == "string" then
+                    if dir:find(value, 1, true) == 1 then
+                        return true
+                    end
+                elseif type(value) == "function" then
+                    local ret = value(dir)
+                    if ret then
+                        return ret
+                    end
+                end
+            end
+        end
+    end
+end
+
+-- Function to add a specified directory to not use smart cwd display, or add
+-- a function to check whether a directory should not use smart cwd display.
+-- When adding a function, the function can return true to disable smart cwd
+-- display, or can return a string to use as the parent for the smart cwd
+-- display.
+function flexprompt.add_no_smart_cwd(dir)
+    flexprompt.settings.no_smart_cwd = flexprompt.settings.no_smart_cwd or {}
+    if type(dir) == "string" then
+        dir = clink.lower(path.normalise(path.join(unicode_normalize(dir), "")))
+    end
+    table.insert(flexprompt.settings.no_smart_cwd, dir)
+end
+
+-- Function to check whether flexprompt.settings.cwd_colors has a custom color
+-- for the specified directory.
+function flexprompt.get_cwd_color(dir)
+    if type(flexprompt.settings.cwd_colors) == "table" then
+        dir = clink.lower(path.normalise(path.join(unicode_normalize(dir), "")))
+        for _, t in ipairs(flexprompt.settings.cwd_colors) do
+            if dir:find(t.dir, 1, true) == 1 then
+                if t.color then
+                    local color = t.color
+                    if string.byte(color) ~= 0x1b then
+                        color = sgr(color)
+                    end
+                    return color
+                end
+            end
+        end
+    end
+end
+
+-- Function to add a custom color for the specified directory.
+function flexprompt.set_cwd_color(dir, color)
+    flexprompt.settings.cwd_colors = flexprompt.settings.cwd_colors or {}
+    dir = clink.lower(path.normalise(path.join(unicode_normalize(dir), "")))
+    table.insert(flexprompt.settings.cwd_colors, { dir=dir, color=color })
+end
+
+-- Function to check whether a custom color is available for the specified
+-- Source Control Management plugin.
+function flexprompt.get_scm_color(scm_type)
+    if scm_type and type(flexprompt.settings.scm_colors) == "table" then
+        local color = flexprompt.settings.scm_colors[scm_type:lower()]
+        if color then
+            if string.byte(color) ~= 0x1b then
+                color = sgr(color)
+            end
+            return color
+        end
+    end
+end
+
+-- Function to set a custom color for the specified Source Control Management
+-- plugin.
+function flexprompt.set_scm_color(scm_type, color)
+    flexprompt.settings.scm_colors = flexprompt.settings.scm_colors or {}
+    flexprompt.settings.scm_colors[scm_type:lower()] = color
+end
+
+-- Function to ask a module to render its content.
+flexprompt.render_module = function(name, args, try_condense)
+    local old_segmenter = segmenter
+    segmenter = {}
+    segmenter._current_module = name
+
+    local results = render_module(name, args, try_condense)
+
+    segmenter._current_module = nil
+    segmenter = old_segmenter
+    return results
+end
+
+-- Functions to translate flexprompt bg and fg colors.
+flexprompt.get_best_bg = get_best_bg
+flexprompt.get_best_fg = get_best_fg
 
 -- Function to register a module's prompt coroutine.
 -- IMPORTANT:  Use this instead of clink.promptcoroutine()!
@@ -1710,6 +2643,9 @@ function flexprompt.prompt_info(cache_container, root, branch, collect_func)
 
     return info, refreshing
 end
+
+-- Function to perform alpha blending of two SGR codes.
+flexprompt.blend_color = blend_color
 
 --------------------------------------------------------------------------------
 -- Internal helpers.
@@ -1747,6 +2683,25 @@ local function load_ini(fileName)
     return data;
 end
 
+local function join_into_absolute(parent, child)
+    -- gitdir can (apparently) be absolute or relative, but everything
+    -- downstream wants absolute paths.  Process leading .. and . path
+    -- components in child.
+    while true do
+        if child:find('^%.%.[/\\]') or child == '..' then
+            parent = path.toparent(parent)
+            child = child:sub(4)
+        elseif child:find('^%.[/\\]') or child == '.' then
+            child = child:sub(3)
+        else
+            break
+        end
+    end
+
+    -- Join the remaining parent and child.
+    return path.join(parent, child):gsub('/', '\\')
+end
+
 local git_config = {}
 function git_config.load(git_dir)
     git_config.config = git_dir and load_ini(path.join(git_dir, 'config')) or nil
@@ -1771,11 +2726,51 @@ flexprompt.get_errorlevel = get_errorlevel
 --------------------------------------------------------------------------------
 -- Public API; git functions.
 
--- Test whether dir is part of a git repo.
--- @return  nil for not in a git repo; or git dir, workspace dir.
+-- Return a command line string to run the specified git command.  It will
+-- include relevant global flags such as "--no-optional-locks", and also "2>nul"
+-- to suppress stderr.
+--
+-- Currently it is just "git", but this function makes it possible in the future
+-- to specify "git.exe" (bypass any git.bat or git.cmd scripts) and/or add a
+-- fully qualified path.
+local function git_command(command, dont_suppress_stderr)
+    command = command or ""
+
+    if not flexprompt.settings.take_optional_locks then
+        command = "--no-optional-locks " .. command
+    elseif type(flexprompt.settings.take_optional_locks) == "table" then
+        local words = string.explode(command)
+        if not flexprompt.settings.take_optional_locks[words[1]] then
+            command = "--no-optional-locks " .. command
+        end
+    end
+
+    command = "git " .. command
+
+    if not dont_suppress_stderr then
+        command = "2>nul " .. command
+    end
+
+    return command
+end
+
+flexprompt.git_command = git_command
+
+-- Test whether dir is a git repo root, or workspace dir, or submodule dir.
+-- @return  nil if not; otherwise git_dir, workspace_dir, dir.
+--
+-- Examples:
+--  * In a repo c:\repo, the return is:
+--      "c:\repo\.git", "c:\repo\.git", "c:\repo"
+--  * In a submodule under c:\repo, the return is:
+--      "c:\repo\.git\modules\submodule", "c:\repo\.git", "c:\repo\submodule"
+--  * In a worktree under c:\repo, the return is:
+--      "c:\repo\.git\worktrees\worktree", "c:\repo\worktree\.git", "c:\repo\worktree"
+--  * In a worktree outside c:\repo, the return is:
+--      "c:\repo\.git\worktrees\worktree", "c:\worktree\.git", "c:\worktree"
 --
 -- Synchronous call.
-function flexprompt.get_git_dir(dir)
+function flexprompt.is_git_dir(dir)
     local function has_git_file(dir) -- luacheck: ignore 432
         local dotgit = path.join(dir, '.git')
         local gitfile
@@ -1784,47 +2779,62 @@ function flexprompt.get_git_dir(dir)
         end
         if not gitfile then return end
 
-        local git_dir = gitfile:read():match('gitdir: (.*)')
+        local git_dir = (gitfile:read() or ""):match('gitdir: (.*)')
         gitfile:close()
 
-        -- gitdir can (apparently) be absolute or relative:
-        local file_when_absolute = git_dir and os.isdir(git_dir) and git_dir
-        if file_when_absolute then
-            -- Don't waste time calling os.isdir on a potentially relative path
-            -- if we already know it's an absolute path.
-            return file_when_absolute
-        end
-        local rel_dir = path.join(dir, git_dir)
-        local file_when_relative = git_dir and os.isdir(rel_dir) and rel_dir
-        if file_when_relative then
-            return file_when_relative
+        if git_dir then
+            -- gitdir can (apparently) be absolute or relative, so a custom
+            -- join routine is needed to build an absolute path regardless.
+            local abs_dir = join_into_absolute(dir, git_dir)
+            if os.isdir(abs_dir) then
+                return abs_dir
+            end
         end
     end
 
-    return flexprompt.scan_upwards(dir, function (dir) -- luacheck: ignore 432
-        -- Return if it's a git dir.
-        local wks = has_dir(dir, ".git")
-        if wks then
-            return wks, wks
-        end
-        -- Check if it has a .git file.
-        local gitdir = has_git_file(dir)
-        if not gitdir then
-            return nil
-        end
+    -- Return if it's a git dir.
+    local gitdir = has_dir(dir, ".git")
+    if gitdir then
+        return gitdir, gitdir, dir
+    end
+
+    -- Check if it has a .git file.
+    gitdir = has_git_file(dir)
+    if gitdir then
+        -- Check if it has a worktree.
         local gitdir_file = path.join(gitdir, "gitdir")
         local file = io.open(gitdir_file)
-        if not file then
-            return nil
+        local wks
+        if file then
+            wks = file:read("*l")
+            file:close()
         end
-        wks = file:read("*l")
-        file:close()
-        return gitdir, wks
-    end)
+        -- If no worktree, check if submodule inside a repo.
+        if not wks then
+            wks = flexprompt.scan_upwards(dir, function (x)
+                return has_dir(x, ".git")
+            end)
+            if not wks then
+                -- No worktree and not nested inside a repo, so give up!
+                return
+            end
+        end
+        return gitdir, wks, dir
+    end
+end
+
+-- Test whether dir is part of a git repo.
+-- @return  nil for not in a git repo; or git dir, workspace dir.
+--
+-- Synchronous call.
+function flexprompt.get_git_dir(dir)
+    return flexprompt.scan_upwards(dir, flexprompt.is_git_dir)
 end
 
 -- Get the name of the current branch.
 -- @return  branch_name, is_detached.
+--
+-- Newer versions return branch_name, is_detached, detached_commit.
 --
 -- Synchronous call.
 function flexprompt.get_git_branch(git_dir)
@@ -1838,34 +2848,44 @@ function flexprompt.get_git_branch(git_dir)
     local HEAD = head_file:read()
     head_file:close()
 
+    -- If HEAD isn't present, something is wrong.
+    if not HEAD then return end
+
     -- If HEAD matches branch expression, then we're on named branch otherwise
     -- it is a detached commit.
     local branch_name = HEAD:match('ref: refs/heads/(.+)')
     if branch_name then
         return branch_name
     else
-        return 'HEAD detached at '..HEAD:sub(1, 7), true
+        return 'HEAD detached at '..HEAD:sub(1, 7), true, HEAD
     end
 end
 
 -- Get the status of working dir.
 -- @return  nil for clean, or a table with dirty counts.
 --
--- Uses async coroutine call.
-function flexprompt.get_git_status(no_untracked)
-    local uflag = no_untracked and "-uno" or ""
-    local file = flexprompt.popenyield("git --no-optional-locks status " .. uflag .. " --branch --porcelain 2>nul")
+-- Use in promptcoroutine callback function.
+function flexprompt.get_git_status(no_untracked, include_submodules)
+    local flags = ""
+    if no_untracked then
+        flags = flags .. "-uno "
+    end
+    if include_submodules then
+        flags = flags .. "--ignore-submodules=none "
+    end
+
+    local file = flexprompt.popenyield(git_command("status " .. flags .. " --branch --porcelain"))
     if not file then
         return { errmsg="[error]" }
     end
 
-    local w_add, w_mod, w_del, w_unt = 0, 0, 0, 0
+    local w_add, w_mod, w_del, w_con, w_unt = 0, 0, 0, 0, 0
     local s_add, s_mod, s_del, s_ren = 0, 0, 0, 0
     local unpublished
     local line
 
     line = file:read("*l")
-    if line then
+    if line and not flexprompt.settings.dont_check_unpublished then
         unpublished = not line:find("^## (.+)%.%.%.")
     end
 
@@ -1881,6 +2901,8 @@ function flexprompt.get_git_status(no_untracked)
             w_mod = w_mod + 1
         elseif kind == "D" then
             w_del = w_del + 1
+        elseif kind == "U" then
+            w_con = w_con + 1
         elseif kind == "?" then
             w_unt = w_unt + 1
         end
@@ -1905,11 +2927,12 @@ function flexprompt.get_git_status(no_untracked)
     local working
     local staged
 
-    if w_add + w_mod + w_del + w_unt > 0 then
+    if w_add + w_mod + w_del + w_con + w_unt > 0 then
         working = {}
         working.add = w_add
         working.modify = w_mod
         working.delete = w_del
+        working.conflict = w_con
         working.untracked = w_unt
     end
 
@@ -1937,9 +2960,9 @@ end
 -- Gets the number of commits ahead/behind from upstream.
 -- @return  ahead, behind.
 --
--- Uses async coroutine call.
+-- Use in promptcoroutine callback function.
 function flexprompt.get_git_ahead_behind()
-    local file = flexprompt.popenyield("git rev-list --count --left-right @{upstream}...HEAD 2>nul")
+    local file = flexprompt.popenyield(git_command("rev-list --count --left-right @{upstream}...HEAD"))
     if not file then
         return
     end
@@ -1956,9 +2979,9 @@ end
 -- Gets the conflict status.
 -- @return  true for conflict, or false for no conflicts.
 --
--- Uses async coroutine call.
+-- Use in promptcoroutine callback function.
 function flexprompt.get_git_conflict()
-    local file = flexprompt.popenyield("git diff --name-only --diff-filter=U 2>nul")
+    local file = flexprompt.popenyield(git_command("diff --name-only --diff-filter=U"))
     if not file then
         return
     end
@@ -1998,6 +3021,117 @@ function flexprompt.get_git_remote(git_dir)
 end
 
 --------------------------------------------------------------------------------
+-- SCM detectors.
+
+function flexprompt.detect_scm()
+    local cwd = os.getcwd()
+    return flexprompt.scan_upwards(cwd, function(dir)
+        for _, scm in ipairs(scms) do
+            local tested_info = scm.test(dir)
+            if tested_info then
+                tested_info = type(tested_info) == "table" and tested_info or {}
+                tested_info.type = scm.type
+                tested_info.info_func = scm.info
+                tested_info.cwd = cwd
+                tested_info.root = dir
+                return tested_info
+            end
+        end
+    end)
+end
+
+function flexprompt.get_scm_info(detected_info, flags)
+    if not detected_info or not detected_info.info_func or not detected_info.root then
+        detected_info = flexprompt.detect_scm()
+        if not detected_info or not detected_info.info_func or not detected_info.root then
+            return
+        end
+    end
+
+    local info = detected_info.info_func(detected_info.root, detected_info, flags)
+    if not info then
+        return
+    end
+
+    info.type = info.type or detected_info.type
+    info.cwd = info.cwd or detected_info.cwd
+    info.root = info.root or detected_info.root
+
+    if info and info.status then
+        local wrk = info.status.working
+        if wrk then
+            if (wrk.conflict or 0) > 0 then
+                info.conflict = true
+            end
+            local keep = false
+            for _, value in pairs(wrk) do
+                if type(value) ~= "number" or value ~= 0 then
+                    keep = true
+                    break
+                end
+            end
+            if keep then
+                info.status.working.add = info.status.working.add or 0
+                info.status.working.modify = info.status.working.modify or 0
+                info.status.working.delete = info.status.working.delete or 0
+                info.status.working.conflict = info.status.working.conflict or 0
+                info.status.working.untracked = info.status.working.untracked or 0
+            else
+                info.status.working = nil
+            end
+        end
+        local stg = info.status.staged
+        if stg then
+            local keep = false
+            for _, value in pairs(stg) do
+                if type(value) ~= "number" or value ~= 0 then
+                    keep = true
+                    break
+                end
+            end
+            if keep then
+                info.status.staged.add = info.status.staged.add or 0
+                info.status.staged.modify = info.status.staged.modify or 0
+                info.status.staged.delete = info.status.staged.delete or 0
+                info.status.staged.rename = info.status.staged.rename or 0
+            else
+                info.status.staged = nil
+            end
+        end
+    end
+    return info
+end
+
+--------------------------------------------------------------------------------
+-- VPN detectors.
+
+-- Run the VPN detectors to get a list of VPN connections.
+--
+-- Use in promptcoroutine callback function.
+function flexprompt.get_vpn_info()
+    local connections = {}
+    for _, vpn in ipairs(vpns) do
+        local t = vpn.test()
+        if t then
+            if type(t) == "table" then
+                for _, name in ipairs(t) do
+                    if type(name) == "table" then
+                        if type(name.name) == "string" then
+                            table.insert(connections, { name=name.name, type=vpn.type, table=name })
+                        end
+                    else
+                        table.insert(connections, { name=name, type=vpn.type })
+                    end
+                end
+            elseif type(t) == "string" then
+                table.insert(connections, { name=t, type=vpn.type })
+            end
+        end
+    end
+    return connections[1] and connections or nil
+end
+
+--------------------------------------------------------------------------------
 -- Shared event handlers.
 
 local offered_wizard
@@ -2011,31 +3145,25 @@ local function onbeginedit()
 
     reset_render_state()
 
+    duration_onbeginedit()
+    time_onbeginedit()
+
     spacing_onbeginedit()
 
     insertmode_onbeginedit()
 
-    if not offered_wizard then
-        local empty = true
-        for n,v in pairs(flexprompt.settings) do
-            if n == "symbols" then
-                for _ in pairs(v) do -- luacheck: ignore 512
-                    empty = false
-                    break
-                end
-            else
-                empty = false
-            end
-            if not empty then
-                break
-            end
-        end
-        if empty then
+    if not offered_wizard and (not clink.getclinkprompt or clink.getclinkprompt() == "") then
+        local settings = flexprompt.settings or {}
+        if not settings.top_prompt and not settings.left_prompt and not settings.right_prompt then
             clink.print("\n" .. sgr(1) .. "Flexprompt has not yet been configured." .. sgr())
             clink.print('Run "flexprompt configure" to configure the prompt.\n')
         end
         offered_wizard = true
     end
+end
+
+local function onendedit()
+    duration_onendedit()
 end
 
 local function oncommand(line_state, info) -- luacheck: no unused
@@ -2046,8 +3174,13 @@ local function oncommand(line_state, info) -- luacheck: no unused
 end
 
 clink.onbeginedit(onbeginedit)
+clink.onendedit(onendedit)
 if clink.oncommand then
     clink.oncommand(oncommand)
+end
+
+if clink.refilterafterterminalresize then
+    clink.refilterafterterminalresize()
 end
 
 local old_diag_custom = clink._diag_custom
@@ -2061,7 +3194,7 @@ clink._diag_custom = function (arg)
     end
 
     local longest = 4
-    for key, cost in pairs(_module_costs) do
+    for key, _ in pairs(_module_costs) do
         local len = console.cellcount(key)
         if longest < len then
             longest = len
@@ -2070,7 +3203,7 @@ clink._diag_custom = function (arg)
 
     if longest > 0 then
         clink.print('\x1b[0;1mflexprompt module cost:\x1b[m')
-        clink.print(string.format('  \x1b[36mmodule%s      last      avg       peak\x1b[m', string.rep(' ', longest - 4)))
+        clink.print(string.format('  \x1b[36mmodule%s     last    avg     peak\x1b[m', string.rep(' ', longest - 4)))
         for key, cost in spairs(_module_costs) do
             local color
             if cost.peak >= 10 then
@@ -2081,7 +3214,7 @@ clink._diag_custom = function (arg)
                 color = ''
             end
             clink.print(string.format(
-                '  %s{%s}%s  %5u ms  %5u ms  %5u ms\x1b[m',
+                '  %s{%s}%s  %4u ms %4u ms %4u ms\x1b[m',
                 color,
                 key,
                 string.rep(' ', longest - console.cellcount(key)),
