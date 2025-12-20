@@ -56,6 +56,10 @@ color.direnv_banner = sgr 0;3;38;5;136
 # type: color
 color.doskey = sgr 1;38;5;75
 
+# name: Color for environment variables
+# type: color
+color.envvars = bright green
+
 # name: Color for executable command word
 # type: color
 color.executable = sgr 1;38;5;33
@@ -136,6 +140,14 @@ color.yarn.module = bright green
 # type: color
 color.yarn.script = bright blue
 
+# name: Delay before showing input hints
+# type: integer
+comment_row.hint_delay = 1000
+
+# name: Allow showing input hints in the comment row
+# type: boolean
+comment_row.show_hints = True
+
 # name: Use default key bindings
 # type: boolean
 fzf.default_bindings = True
@@ -166,4 +178,12 @@ prompt.spacing = sparse
 # type: enum
 # options: off,always,same_dir
 prompt.transient = off
+
+# name: Automatically expand ~ to home directory
+# type: boolean
+tilde.autoexpand = False
+
+# name: Use clink promptfilter to hook even if onbegined
+# type: boolean
+zoxide.usepromptfilter = True
 

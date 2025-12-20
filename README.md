@@ -23,7 +23,7 @@ This is a "backup" of my current WT settings. Feel free to use it but YMMV and I
 2. Install all fonts from `fonts` folder and use it in Windows Terminal
 3. Install required dependencies using the script (or manually if you don't use `choco`):
 ```shell
-$ choco install fzf fd eza ripgrep jq
+$ choco install fzf fd eza ripgrep jq zoxide
 ```
 4. Setup Windows Terminal task: 
 
@@ -78,10 +78,6 @@ You can have the same experience in VSCode terminal by adding the following to t
 ```
 
 # Extras
-
-## Docker
-
-If you're a docker user I strongly recommend trying [lazydocker](https://github.com/jesseduffield/lazydocker) and `dive` when building your own images (bundled inside `bin` in this repo so available from anywhere)
 
 ## Total Commander
 
