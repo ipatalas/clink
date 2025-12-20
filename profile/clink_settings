@@ -2,6 +2,10 @@
 # type: boolean
 autosuggest.enable = True
 
+# name: A .clinkprompt file to use for the prompt
+# type: string
+clink.customprompt = 
+
 # name: Selects default key bindings
 # type: enum
 # options: bash,windows
@@ -168,6 +172,10 @@ match.expand_envvars = True
 # name: Try substring if no prefix matches
 # type: boolean
 match.substring = True
+
+# name: Enables icons in file completions
+# type: boolean
+matchicons.enable = True
 
 # name: Controls spacing before prompt
 # type: enum
