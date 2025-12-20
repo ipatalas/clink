@@ -51,83 +51,89 @@ local clink_prompt_spacing = (settings.get("prompt.spacing") ~= nil)
 --------------------------------------------------------------------------------
 -- Color codes.
 
-local realblack = { fg="30", bg="40", extfg="38;5;0", extbg="48;5;0" }
-local realwhite = { fg="37", bg="47", extfg="38;5;7", extbg="48;5;7", altcolor=realblack }
-local nearlywhite = { fg="37", bg="47", extfg="38;5;252", extbg="48;5;252" }
+local realblack = { fg = "30", bg = "40", extfg = "38;5;0", extbg = "48;5;0" }
+local realwhite = { fg = "37", bg = "47", extfg = "38;5;7", extbg = "48;5;7", altcolor = realblack }
+local nearlywhite = { fg = "37", bg = "47", extfg = "38;5;252", extbg = "48;5;252" }
 
 flexprompt.colors =
 {
-    bold            = { fg="1"                  },
-    default         = { fg="39",    bg="49"     },
+    bold              = { fg = "1" },
+    default           = { fg = "39", bg = "49" },
 
     -- Normal low intensity colors.  Some styles brighten the normal low
     -- intensity colors; the "dark" versions are never brightened.
-    black           = { fg="30",    bg="40",    lean="brightblack",     classic="brightblack",      },
-    red             = { fg="31",    bg="41",    lean="brightred",       classic="brightred",        },
-    green           = { fg="32",    bg="42",    lean="brightgreen",     classic="brightgreen",      },
-    yellow          = { fg="33",    bg="43",    lean="brightyellow",    classic="brightyellow",     },
-    blue            = { fg="34",    bg="44",    lean="brightblue",      classic="brightblue",       },
-    magenta         = { fg="35",    bg="45",    lean="brightmagenta",   classic="brightmagenta",    },
-    cyan            = { fg="36",    bg="46",    lean="brightcyan",      classic="brightcyan",       },
-    white           = { fg="37",    bg="47",    lean="brightwhite",     classic="brightwhite",      },
+    black             = { fg = "30", bg = "40", lean = "brightblack", classic = "brightblack", },
+    red               = { fg = "31", bg = "41", lean = "brightred", classic = "brightred", },
+    green             = { fg = "32", bg = "42", lean = "brightgreen", classic = "brightgreen", },
+    yellow            = { fg = "33", bg = "43", lean = "brightyellow", classic = "brightyellow", },
+    blue              = { fg = "34", bg = "44", lean = "brightblue", classic = "brightblue", },
+    magenta           = { fg = "35", bg = "45", lean = "brightmagenta", classic = "brightmagenta", },
+    cyan              = { fg = "36", bg = "46", lean = "brightcyan", classic = "brightcyan", },
+    white             = { fg = "37", bg = "47", lean = "brightwhite", classic = "brightwhite", },
     -- High intensity colors.
-    brightblack     = { fg="90",    bg="100",   },
-    brightred       = { fg="91",    bg="101",   },
-    brightgreen     = { fg="92",    bg="102",   },
-    brightyellow    = { fg="93",    bg="103",   },
-    brightblue      = { fg="94",    bg="104",   },
-    brightmagenta   = { fg="95",    bg="105",   },
-    brightcyan      = { fg="96",    bg="106",   },
-    brightwhite     = { fg="97",    bg="107",   },
+    brightblack       = { fg = "90", bg = "100", },
+    brightred         = { fg = "91", bg = "101", },
+    brightgreen       = { fg = "92", bg = "102", },
+    brightyellow      = { fg = "93", bg = "103", },
+    brightblue        = { fg = "94", bg = "104", },
+    brightmagenta     = { fg = "95", bg = "105", },
+    brightcyan        = { fg = "96", bg = "106", },
+    brightwhite       = { fg = "97", bg = "107", },
     -- Low intensity colors.  Some styles brighten the normal low intensity
     -- colors; the "dark" versions are never brightened.
-    darkblack       = { fg="30",    bg="40",    },
-    darkred         = { fg="31",    bg="41",    },
-    darkgreen       = { fg="32",    bg="42",    },
-    darkyellow      = { fg="33",    bg="43",    },
-    darkblue        = { fg="34",    bg="44",    },
-    darkmagenta     = { fg="35",    bg="45",    },
-    darkcyan        = { fg="36",    bg="46",    },
-    darkwhite       = { fg="37",    bg="47",    },
+    darkblack         = { fg = "30", bg = "40", },
+    darkred           = { fg = "31", bg = "41", },
+    darkgreen         = { fg = "32", bg = "42", },
+    darkyellow        = { fg = "33", bg = "43", },
+    darkblue          = { fg = "34", bg = "44", },
+    darkmagenta       = { fg = "35", bg = "45", },
+    darkcyan          = { fg = "36", bg = "46", },
+    darkwhite         = { fg = "37", bg = "47", },
 
     -- Real colors.  These use the real color (vs console theme color) when
     -- extended colors are available.
-    realblack           = realblack,
-    realred             = { fg="31", bg="41",   extfg="38;5;1",     extbg="48;5;1"  },
-    realgreen           = { fg="32", bg="42",   extfg="38;5;2",     extbg="48;5;2"  },
-    realyellow          = { fg="33", bg="43",   extfg="38;5;3",     extbg="48;5;3"  },
-    realblue            = { fg="34", bg="44",   extfg="38;5;4",     extbg="48;5;4"  },
-    realmagenta         = { fg="35", bg="45",   extfg="38;5;5",     extbg="48;5;5"  },
-    realcyan            = { fg="36", bg="46",   extfg="38;5;6",     extbg="48;5;6"  },
-    realwhite           = realwhite,
-    realbrightblack     = { fg="91", bg="101",  extfg="38;5;8",     extbg="48;5;8"  },
-    realbrightred       = { fg="91", bg="101",  extfg="38;5;9",     extbg="48;5;9"  },
-    realbrightgreen     = { fg="92", bg="102",  extfg="38;5;10",    extbg="48;5;10" },
-    realbrightyellow    = { fg="93", bg="103",  extfg="38;5;11",    extbg="48;5;11" },
-    realbrightblue      = { fg="94", bg="104",  extfg="38;5;12",    extbg="48;5;12" },
-    realbrightmagenta   = { fg="95", bg="105",  extfg="38;5;13",    extbg="48;5;13" },
-    realbrightcyan      = { fg="96", bg="106",  extfg="38;5;14",    extbg="48;5;14" },
-    realbrightwhite     = { fg="97", bg="107",  extfg="38;5;15",    extbg="48;5;15" },
+    realblack         = realblack,
+    realred           = { fg = "31", bg = "41", extfg = "38;5;1", extbg = "48;5;1" },
+    realgreen         = { fg = "32", bg = "42", extfg = "38;5;2", extbg = "48;5;2" },
+    realyellow        = { fg = "33", bg = "43", extfg = "38;5;3", extbg = "48;5;3" },
+    realblue          = { fg = "34", bg = "44", extfg = "38;5;4", extbg = "48;5;4" },
+    realmagenta       = { fg = "35", bg = "45", extfg = "38;5;5", extbg = "48;5;5" },
+    realcyan          = { fg = "36", bg = "46", extfg = "38;5;6", extbg = "48;5;6" },
+    realwhite         = realwhite,
+    realbrightblack   = { fg = "91", bg = "101", extfg = "38;5;8", extbg = "48;5;8" },
+    realbrightred     = { fg = "91", bg = "101", extfg = "38;5;9", extbg = "48;5;9" },
+    realbrightgreen   = { fg = "92", bg = "102", extfg = "38;5;10", extbg = "48;5;10" },
+    realbrightyellow  = { fg = "93", bg = "103", extfg = "38;5;11", extbg = "48;5;11" },
+    realbrightblue    = { fg = "94", bg = "104", extfg = "38;5;12", extbg = "48;5;12" },
+    realbrightmagenta = { fg = "95", bg = "105", extfg = "38;5;13", extbg = "48;5;13" },
+    realbrightcyan    = { fg = "96", bg = "106", extfg = "38;5;14", extbg = "48;5;14" },
+    realbrightwhite   = { fg = "97", bg = "107", extfg = "38;5;15", extbg = "48;5;15" },
 
     -- Default text color in rainbow style.
-    rainbow_text    = nearlywhite,
+    rainbow_text      = nearlywhite,
 
     -- Version control colors.
-    vcs_blacktext   = realblack,
-    vcs_whitetext   = nearlywhite,
-    vcs_conflict    = { fg="91",    bg="101",   extfg="38;5;160",   extbg="48;5;160",   rainbow={ fg="31", bg="41", extfg="38;5;1", extbg="48;5;1", altcolor=nearlywhite } },
-    vcs_unresolved  = { fg="91",    bg="101",   extfg="38;5;160",   extbg="48;5;160",   rainbow={ fg="31", bg="41", extfg="38;5;1", extbg="48;5;1", altcolor=realblack } },
-    vcs_clean       = { fg="92",    bg="102",   extfg="38;5;40",    extbg="48;5;40",    rainbow={ fg="32", bg="42", extfg="38;5;2", extbg="48;5;2", altcolor=realblack } },
-    vcs_dirty       = { fg="93",    bg="103",   extfg="38;5;11",    extbg="48;5;11",    rainbow={ fg="33", bg="43", extfg="38;5;178", extbg="48;5;178", altcolor=realblack } },
-    vcs_staged      = { fg="95",    bg="105",   extfg="38;5;164",   extbg="48;5;164",   rainbow={ fg="35", bg="45", extfg="38;5;5", extbg="48;5;5", altcolor=realblack } },
-    vcs_unpublished = { fg="95",    bg="105",   extfg="38;5;141",   extbg="48;5;141",   rainbow={ fg="35", bg="45", extfg="38;5;99", extbg="48;5;99", altcolor=realblack } },
-    vcs_remote      = { fg="96",    bg="106",   extfg="38;5;44",    extbg="48;5;44",    rainbow={ fg="36", bg="46", extfg="38;5;6", extbg="48;5;6", altcolor=realblack } },
-    vcs_unknown     = realwhite,
+    vcs_blacktext     = realblack,
+    vcs_whitetext     = nearlywhite,
+    vcs_conflict      = { fg = "91", bg = "101", extfg = "38;5;160", extbg = "48;5;160", rainbow = { fg = "31", bg = "41", extfg = "38;5;1", extbg = "48;5;1", altcolor = nearlywhite } },
+    vcs_unresolved    = { fg = "91", bg = "101", extfg = "38;5;160", extbg = "48;5;160", rainbow = { fg = "31", bg = "41", extfg = "38;5;1", extbg = "48;5;1", altcolor = realblack } },
+    vcs_clean         = { fg = "92", bg = "102", extfg = "38;5;40", extbg = "48;5;40", rainbow = { fg = "32", bg = "42", extfg = "38;5;2", extbg = "48;5;2", altcolor = realblack } },
+    vcs_dirty         = { fg = "93", bg = "103", extfg = "38;5;11", extbg = "48;5;11", rainbow = { fg = "33", bg = "43", extfg = "38;5;178", extbg = "48;5;178", altcolor = realblack } },
+    vcs_staged        = { fg = "95", bg = "105", extfg = "38;5;164", extbg = "48;5;164", rainbow = { fg = "35", bg = "45", extfg = "38;5;5", extbg = "48;5;5", altcolor = realblack } },
+    vcs_unpublished   = { fg = "95", bg = "105", extfg = "38;5;141", extbg = "48;5;141", rainbow = { fg = "35", bg = "45", extfg = "38;5;99", extbg = "48;5;99", altcolor = realblack } },
+    vcs_remote        = { fg = "96", bg = "106", extfg = "38;5;44", extbg = "48;5;44", rainbow = { fg = "36", bg = "46", extfg = "38;5;6", extbg = "48;5;6", altcolor = realblack } },
+    vcs_unknown       = realwhite,
 
     -- Exit code colors.
-    exit_zero       = { fg="32",    bg="42",    extfg="38;5;2",     extbg="48;5;2",     rainbow={ fg="30", bg="40", extfg="38;5;0", extbg="48;5;0", altcolor={ fg="32", bg="42", extfg="38;5;34", extbg="48;5;34" } } },
-    exit_nonzero    = { fg="91",    bg="101",   extfg="38;5;160",   extbg="48;5;160",   rainbow={ fg="31", bg="41", extfg="38;5;1", extbg="48;5;1", altcolor={ fg="93", bg="103", extfg="38;5;11", extbg="48;5;11" } },
-                                                                                        classic={ fg="91", bg="101", extfg="38;5;196", extbg="48;5;196" } },
+    exit_zero         = { fg = "32", bg = "42", extfg = "38;5;2", extbg = "48;5;2", rainbow = { fg = "30", bg = "40", extfg = "38;5;0", extbg = "48;5;0", altcolor = { fg = "32", bg = "42", extfg = "38;5;34", extbg = "48;5;34" } } },
+    exit_nonzero      = {
+        fg = "91",
+        bg = "101",
+        extfg = "38;5;160",
+        extbg = "48;5;160",
+        rainbow = { fg = "31", bg = "41", extfg = "38;5;1", extbg = "48;5;1", altcolor = { fg = "93", bg = "103", extfg = "38;5;11", extbg = "48;5;11" } },
+        classic = { fg = "91", bg = "101", extfg = "38;5;196", extbg = "48;5;196" }
+    },
 }
 
 --------------------------------------------------------------------------------
@@ -137,102 +143,102 @@ flexprompt.choices = {}
 
 flexprompt.choices.charsets =
 {
-    ascii       = "ascii",
-    unicode     = "unicode",
+    ascii   = "ascii",
+    unicode = "unicode",
 }
 
 flexprompt.choices.styles =
 {
-    lean        = "lean",
-    classic     = "classic",
-    rainbow     = "rainbow",
+    lean    = "lean",
+    classic = "classic",
+    rainbow = "rainbow",
 }
 
 flexprompt.choices.sides =
 {
-    left        = "left",
-    both        = "both",
+    left = "left",
+    both = "both",
 }
 
 -- Default prompt strings based on styles and sides.
 flexprompt.choices.prompts =
 {
-    lean        = { left = { "{battery}{histlabel}{cwd}{git}{duration}{time}" }, both = { "{battery}{histlabel}{cwd}{git}", "{exit}{duration}{time}" } },
-    classic     = { left = { "{battery}{histlabel}{cwd}{git}{exit}{duration}{time}" }, both = { "{battery}{histlabel}{cwd}{git}", "{exit}{duration}{time}" } },
-    rainbow     = { left = { "{battery:breakright}{histlabel}{cwd}{git}{exit}{duration}{time:dim}" }, both = { "{battery:breakright}{histlabel}{cwd}{git}", "{exit}{duration}{time}" } },
-    breaks      = { left = { "{battery:breakright}{histlabel}{cwd}{break}{git}{break}{exit}{duration}{break}{time:dim}" }, both = { "{battery}{break}{histlabel}{cwd}{break}{git}", "{exit}{duration}{break}{time}" } },
+    lean    = { left = { "{battery}{histlabel}{cwd}{git}{duration}{time}" }, both = { "{battery}{histlabel}{cwd}{git}", "{exit}{duration}{time}" } },
+    classic = { left = { "{battery}{histlabel}{cwd}{git}{exit}{duration}{time}" }, both = { "{battery}{histlabel}{cwd}{git}", "{exit}{duration}{time}" } },
+    rainbow = { left = { "{battery:breakright}{histlabel}{cwd}{git}{exit}{duration}{time:dim}" }, both = { "{battery:breakright}{histlabel}{cwd}{git}", "{exit}{duration}{time}" } },
+    breaks  = { left = { "{battery:breakright}{histlabel}{cwd}{break}{git}{break}{exit}{duration}{break}{time:dim}" }, both = { "{battery}{break}{histlabel}{cwd}{break}{git}", "{exit}{duration}{break}{time}" } },
 }
 
 -- Only if style != lean.
 flexprompt.choices.ascii_caps =
 {
-                --  Open    Close
-    none        = { "",     ""      },
-    flat        = { "",     "",     separators="bar" },
+    --  Open    Close
+    none = { "", "" },
+    flat = { "", "", separators = "bar" },
 }
 
 -- Only if style != lean.
 flexprompt.choices.caps =
 {
-                --  Open    Close
-    none        = { "",     ""      },
-    flat        = { "",     ""      },
-    vertical    = { "",     ""      },  -- A separator when style == rainbow.
-    pointed     = { "",    ""     },
-    slant       = { "",    ""     },
-    backslant   = { "",    ""     },
-    round       = { "",    ""     },
-    blurred     = { "░▒▓",  "▓▒░"   },
+    --  Open    Close
+    none      = { "", "" },
+    flat      = { "", "" },
+    vertical  = { "", "" },            -- A separator when style == rainbow.
+    pointed   = { "", "" },
+    slant     = { "", "" },
+    backslant = { "", "" },
+    round     = { "", "" },
+    blurred   = { "░▒▓", "▓▒░" },
 }
 
 -- Only if style == classic.
 flexprompt.choices.separators =
-{               --  Left    Right
-    none        = { "",     ""      },
-    space       = { " ",    " ",    lean=" " },     -- Also when style == lean.
-    spaces      = { "  ",   "  ",   lean="  " },    -- Also when style == lean.
-    vertical    = { "│",    "│",    rainbow="" },
-    pointed     = { "",    ""     },
-    slant       = { "",    ""     },
-    backslant   = { "",    ""     },
-    round       = { "",    ""     },
-    dot         = { "·",    "·"     },
-    updiagonal  = { "╱",    "╱"     },
-    downdiagonal= { "╲",    "╲"     },
-    bar         = { "|",    "|"     },
-    slash       = { "/",    "/"     },
-    backslash   = { "\\",   "\\"    },
+{                                                --  Left    Right
+    none         = { "", "" },
+    space        = { " ", " ", lean = " " },     -- Also when style == lean.
+    spaces       = { "  ", "  ", lean = "  " },  -- Also when style == lean.
+    vertical     = { "│", "│", rainbow = "" },
+    pointed      = { "", "" },
+    slant        = { "", "" },
+    backslant    = { "", "" },
+    round        = { "", "" },
+    dot          = { "·", "·" },
+    updiagonal   = { "╱", "╱" },
+    downdiagonal = { "╲", "╲" },
+    bar          = { "|", "|" },
+    slash        = { "/", "/" },
+    backslash    = { "\\", "\\" },
 }
 
 flexprompt.choices.lines =
 {
-    one         = 1,
-    two         = 2,
+    one = 1,
+    two = 2,
 }
 
 -- Only if lines > 1 and right_prompt is not nil.
 flexprompt.choices.connections =
 {
-    disconnected= " ",
-    dotted      = "·",
-    solid       = "─",
-    dashed      = "-",
+    disconnected = " ",
+    dotted       = "·",
+    solid        = "─",
+    dashed       = "-",
 }
 
 -- Only if lines > 1.
 flexprompt.choices.left_frames =
 {
-    none        = {},
-    square      = { "┌─",   "└─"    },
-    round       = { "╭─",   "╰─"    },
+    none   = {},
+    square = { "┌─", "└─" },
+    round  = { "╭─", "╰─" },
 }
 
 -- Only if lines > 1 and right_prompt is not nil.
 flexprompt.choices.right_frames =
 {
-    none        = {},
-    square      = { "─┐",   "─┘"    },
-    round       = { "─╮",   "─╯"    },
+    none   = {},
+    square = { "─┐", "─┘" },
+    round  = { "─╮", "─╯" },
 }
 
 -- Only if separators or connectors or frames.
@@ -241,24 +247,24 @@ local fc_back = 2
 local fc_fore = 3
 local fc_sep = 4
 flexprompt.choices.frame_colors =
-{               --  Frame       Back        Fore        Separator (optional; falls back to Frame)
-    lightest    = { "38;5;244", "38;5;240", "38;5;248"  },
-    light       = { "38;5;242", "38;5;238", "38;5;246"  },
-    dark        = { "38;5;240", "38;5;236", "38;5;244"  },
-    darkest     = { "38;5;238", "38;5;234", "38;5;242"  },
+{ --  Frame       Back        Fore        Separator (optional; falls back to Frame)
+    lightest = { "38;5;244", "38;5;240", "38;5;248" },
+    light    = { "38;5;242", "38;5;238", "38;5;246" },
+    dark     = { "38;5;240", "38;5;236", "38;5;244" },
+    darkest  = { "38;5;238", "38;5;234", "38;5;242" },
 }
 
 flexprompt.choices.spacing =
 {
-    compact     = "compact",
-    normal      = "normal",
-    sparse      = "sparse",
+    compact = "compact",
+    normal  = "normal",
+    sparse  = "sparse",
 }
 
 flexprompt.choices.flows =
 {
-    concise     = "concise",
-    fluent      = "fluent",
+    concise = "concise",
+    fluent  = "fluent",
 }
 
 flexprompt.choices.transient =
@@ -271,47 +277,47 @@ flexprompt.choices.transient =
 -- Only if lines > 1 and left frame none, or if lines == 1 and style == lean, or if transient.
 flexprompt.choices.prompt_symbols =
 {
-    angle       = { ">" }, -- unicode="❯" looks very good in some fonts, and is missing in some fonts.
-    dollar      = { "$" },
-    percent     = { "%" },
+    angle   = { ">" },     -- unicode="❯" looks very good in some fonts, and is missing in some fonts.
+    dollar  = { "$" },
+    percent = { "%" },
 }
 
 local symbols =
 {
-    branch          = {         powerline="" },
-    unpublished     = {         nerdfonts2={""," "}, nerdfonts3={""," "} },
-    submodule       = {         nerdfonts2={""," "}, nerdfonts3={""," "} },
+    branch          = { powerline = "" },
+    unpublished     = { nerdfonts2 = { "", " " }, nerdfonts3 = { "", " " } },
+    submodule       = { nerdfonts2 = { "", " " }, nerdfonts3 = { "", " " } },
 
     conflict        = { "!" },
     addcount        = { "+" },
     modifycount     = { "*" },
     deletecount     = { "-" },
-    renamecount     = { "" },   -- Empty string counts renames as modified.
-    summarycount    = { "*",    unicode="±" },
+    renamecount     = { "" }, -- Empty string counts renames as modified.
+    summarycount    = { "*", unicode = "±" },
     untrackedcount  = { "?" },
-    aheadbehind     = { "" },   -- Optional symbol preceding ahead/behind counts.
-    aheadcount      = { ">>",   unicode="↓" },
-    behindcount     = { "<<",   unicode="↑" },
-    staged          = { "#",    unicode="↗" },
+    aheadbehind     = { "" }, -- Optional symbol preceding ahead/behind counts.
+    aheadcount      = { ">>", unicode = "↓" },
+    behindcount     = { "<<", unicode = "↑" },
+    staged          = { "#", unicode = "↗" },
 
     battery         = { "%" },
-    charging        = { "++",   nerdfonts2={""," "}, nerdfonts3={""," "} },
-    smartcharging   = { "%",    unicode="♥" },
+    charging        = { "++", nerdfonts2 = { "", " " }, nerdfonts3 = { "", " " } },
+    smartcharging   = { "%", unicode = "♥" },
 
-                                -- Note: coloremoji for exit_zero requires Clink v1.4.28 or higher.
-    exit_zero       = {         coloremoji="✔️", nerdfonts2={"\x1b[92m\002","\x1b[92m \002"}, nerdfonts3={"\x1b[92m\002","\x1b[92m \002"} },
-    exit_nonzero    = {         coloremoji="❌", nerdfonts2={"\x1b[91m\002","\x1b[91m \002"}, nerdfonts3={"\x1b[91m\002","\x1b[91m \002"} },
+    -- Note: coloremoji for exit_zero requires Clink v1.4.28 or higher.
+    exit_zero       = { coloremoji = "✔️", nerdfonts2 = { "\x1b[92m\002", "\x1b[92m \002" }, nerdfonts3 = { "\x1b[92m\002", "\x1b[92m \002" } },
+    exit_nonzero    = { coloremoji = "❌", nerdfonts2 = { "\x1b[91m\002", "\x1b[91m \002" }, nerdfonts3 = { "\x1b[91m\002", "\x1b[91m \002" } },
 
     prompt          = { ">" },
-    overtype_prompt = { ">",    unicode="►" },
+    overtype_prompt = { ">", unicode = "►" },
 
-    admin           = {         powerline="" },
-    no_admin        = {         nerdfonts2={""," "}, nerdfonts3={""," "} },
+    admin           = { powerline = "" },
+    no_admin        = { nerdfonts2 = { "", " " }, nerdfonts3 = { "", " " } },
 
-    vpn             = {         coloremoji="☁️", nerdfonts2={"",""}, nerdfonts3=" " },
-    no_vpn          = {         coloremoji="🌎", nerdfonts2={""," "}, nerdfonts3={""," "} },
+    vpn             = { coloremoji = "☁️", nerdfonts2 = { "", "" }, nerdfonts3 = " " },
+    no_vpn          = { coloremoji = "🌎", nerdfonts2 = { "", " " }, nerdfonts3 = { "", " " } },
 
-    refresh         = {         nerdfonts2={""," "}, nerdfonts3={""," "} },  --   
+    refresh         = { nerdfonts2 = { "", " " }, nerdfonts3 = { "", " " } }, --   
 }
 
 if ((clink.version_encoded) or 0) < 10040028 then
@@ -342,7 +348,7 @@ local function sgr(code)
     elseif string.byte(code) == 0x1b then
         return code
     else
-        return "\x1b["..code.."m"
+        return "\x1b[" .. code .. "m"
     end
 end
 
@@ -350,19 +356,33 @@ local getcolortable = console.getcolortable
 if not getcolortable then
     getcolortable = function()
         return {
-            "#0c0c0c", "#0037da", "#13a10e", "#3a96dd",
-            "#c50f1f", "#881798", "#c19c00", "#cccccc",
-            "#767676", "#3b78ff", "#16c60c", "#61d6d6",
-            "#e74856", "#b4009e", "#f9f1a5", "#f2f2f2",
-            foreground=8, background=1, default=true,
+            "#0c0c0c",
+            "#0037da",
+            "#13a10e",
+            "#3a96dd",
+            "#c50f1f",
+            "#881798",
+            "#c19c00",
+            "#cccccc",
+            "#767676",
+            "#3b78ff",
+            "#16c60c",
+            "#61d6d6",
+            "#e74856",
+            "#b4009e",
+            "#f9f1a5",
+            "#f2f2f2",
+            foreground = 8,
+            background = 1,
+            default = true,
         }
     end
 end
 
 local ansi_to_vga =
 {
-    0,  4,  2,  6,  1,  5,  3,  7,
-    8, 12, 10, 14,  9, 13, 11, 15,
+    0, 4, 2, 6, 1, 5, 3, 7,
+    8, 12, 10, 14, 9, 13, 11, 15,
 }
 
 local function rgb_from_colortable(num)
@@ -417,7 +437,7 @@ local function rgb_from_color(inner)
             g = cube_series[g + 1]
             b = cube_series[b + 1]
         end
-        pro = inner:sub(1, 1).."8;2;"
+        pro = inner:sub(1, 1) .. "8;2;"
         return pro, r, g, b, epi
     end
     local n = 0
@@ -430,18 +450,18 @@ local function rgb_from_color(inner)
             if n == 1 then
                 bold = true
             elseif (n >= 30 and n <= 37) or
-                    (n >= 40 and n <= 47) or
-                    (n >= 90 and n <= 97) or
-                    (n >= 100 and n <= 107) or
-                    n == 39 or n == 49 then
+                (n >= 40 and n <= 47) or
+                (n >= 90 and n <= 97) or
+                (n >= 100 and n <= 107) or
+                n == 39 or n == 49 then
                 if tag == 0 then
                     tag = n
                 end
             else
                 if #epi > 0 then
-                    epi = epi..";"
+                    epi = epi .. ";"
                 end
-                epi = epi..tostring(n)
+                epi = epi .. tostring(n)
             end
             if not x then
                 break
@@ -492,7 +512,7 @@ local function blend_color(code1, code2, opacity1)
     local r = math.floor((tonumber(r1) * opacity1) + (tonumber(r2) * (1 - opacity1)))
     local g = math.floor((tonumber(g1) * opacity1) + (tonumber(g2) * (1 - opacity1)))
     local b = math.floor((tonumber(b1) * opacity1) + (tonumber(b2) * (1 - opacity1)))
-    local ret = pro1..string.format("%u;%u;%u", r, g, b)..epi1
+    local ret = pro1 .. string.format("%u;%u;%u", r, g, b) .. epi1
     if inner1 ~= code1 then
         ret = sgr(ret)
     end
@@ -650,10 +670,10 @@ local function lookup_color(args)
         return color
     end
 
-    local mode = args:sub(1,3)
+    local mode = args:sub(1, 3)
     if mode == "38;" or mode == "48;" then
         args = args:sub(4)
-        return { fg = "38;"..args, bg = "48;"..args }
+        return { fg = "38;" .. args, bg = "48;" .. args }
     end
 
     -- Use the color even though it's not understood.  But not in rainbow style,
@@ -761,8 +781,8 @@ local function get_prompt_symbol_color()
         local err = get_errorlevel()
         if err then
             color = (err == 0) and
-                    (flexprompt.settings.exit_zero_color or "realbrightgreen") or
-                    (flexprompt.settings.exit_nonzero_color or "realbrightred")
+                (flexprompt.settings.exit_zero_color or "realbrightgreen") or
+                (flexprompt.settings.exit_nonzero_color or "realbrightred")
         end
     end
     color = color or "brightwhite"
@@ -834,7 +854,7 @@ local function connect(lhs, rhs, frame, sgr_frame_color)
         end
         lhs = lhs .. sgr_frame_color .. string.rep(get_connector(), gap)
     end
-    return lhs..rhs..frame, dropped
+    return lhs .. rhs .. frame, dropped
 end
 
 local _refilter_modules
@@ -873,7 +893,7 @@ local function spairs(t, order)
     end
 
     if order then
-        table.sort(keys, function(a,b) return order(t, a, b) end)
+        table.sort(keys, function(a, b) return order(t, a, b) end)
     else
         table.sort(keys)
     end
@@ -921,7 +941,7 @@ end
 local function maybe_apply_tilde(dir, force)
     if force or flexprompt.settings.use_home_tilde then
         local home = os.getenv("HOME")
-        if home and string.find(string.lower(dir), string.lower(home), 1, true--[[plain]]) == 1 then
+        if home and string.find(string.lower(dir), string.lower(home), 1, true --[[plain]]) == 1 then
             dir = "~" .. string.sub(dir, #home + 1)
             return dir, true
         end
@@ -1217,7 +1237,7 @@ local function init_segmenter(side, frame_color)
     segmenter.open_cap = open_caps[1]
     segmenter.close_cap = close_caps[2]
 
-    local sep_index = side + 1      -- Overridden later if sep is an end cap.
+    local sep_index = side + 1 -- Overridden later if sep is an end cap.
     local altsep_index = side + 1
 
     if segmenter.style == "lean" then
@@ -1254,7 +1274,8 @@ local function init_segmenter(side, frame_color)
 
         -- Rainbow needs to know available_separators for setting up
         -- altseparators, for when bg == fg.
-        local available_separators = (charset == "ascii") and flexprompt.choices.ascii_separators or flexprompt.choices.separators
+        local available_separators = (charset == "ascii") and flexprompt.choices.ascii_separators or
+        flexprompt.choices.separators
 
         if segmenter.style == "classic" then
             -- If separators (still) missing, default based on charset.
@@ -1294,7 +1315,8 @@ local function init_segmenter(side, frame_color)
             if segmenter.style == "lean" then
                 connector = " " .. connector .. " "
             end
-            separators = sgr(flexprompt.colors.default.bg .. ";" .. get_best_fg(segmenter.frame_color[fc_frame])) .. connector
+            separators = sgr(flexprompt.colors.default.bg .. ";" .. get_best_fg(segmenter.frame_color[fc_frame])) ..
+            connector
         else
             separators = resolve_color_codes(separators, "")
         end
@@ -1366,7 +1388,8 @@ local function next_segment(text, color, rainbow_text_color, isbreak, pending_se
     local out = ""
 
     if pending_segment then
-        out = next_segment(pending_segment.text, lookup_color(pending_segment.color), pending_segment.altcolor, pending_segment.isbreak)
+        out = next_segment(pending_segment.text, lookup_color(pending_segment.color), pending_segment.altcolor,
+            pending_segment.isbreak)
     end
 
     local wasbreak = segmenter.isbreak
@@ -1410,8 +1433,8 @@ local function next_segment(text, color, rainbow_text_color, isbreak, pending_se
     end
 
     local pad = (segmenter.style == "lean" -- Lean has no padding.
-                 or text == "") -- Segment with empty string has no padding.
-                 and "" or " "
+            or text == "")                 -- Segment with empty string has no padding.
+        and "" or " "
 
     if not text then
         if segmenter.style ~= "lean" and not segmenter.open_cap then
@@ -1453,7 +1476,8 @@ local function next_segment(text, color, rainbow_text_color, isbreak, pending_se
     -- frame color.
     if text == "" and sep:gsub(" ", "") == "" then
         local connector = get_connector()
-        text = make_fluent_text(sgr(flexprompt.colors.default.bg .. ";" .. get_best_fg(segmenter.frame_color[fc_frame])) .. connector)
+        text = make_fluent_text(sgr(flexprompt.colors.default.bg .. ";" .. get_best_fg(segmenter.frame_color[fc_frame])) ..
+        connector)
     end
 
     -- Applying 'color' goes last so that the module can override other colors
@@ -1502,8 +1526,8 @@ end
 
 local function promptcoroutine_manager()
     if _cached_state.coroutines then
-        for _,entry in pairs(_cached_state.coroutines) do
-            entry.func(true--[[async]])
+        for _, entry in pairs(_cached_state.coroutines) do
+            entry.func(true --[[async]])
         end
     end
 end
@@ -1515,11 +1539,11 @@ local function promptcoroutine(func)
 
     local entry = _cached_state.coroutines[segmenter._current_module]
     if entry == nil then
-        entry = { done=false, result=nil }
+        entry = { done = false, result = nil }
         _cached_state.coroutines[segmenter._current_module] = entry
 
         -- Wrap func to track completion and result.
-        entry.func = function (async)
+        entry.func = function(async)
             local o = func(async)
             entry.done = true
             entry.result = o
@@ -1539,8 +1563,8 @@ local function promptcoroutine(func)
             -- Create coroutine for running func synchronously.  We must
             -- maintain func's expectation that it is run as a coroutine, even
             -- when it's not being run asynchronously.
-            local c = coroutine.create(function ()
-                entry.func(false--[[async]])
+            local c = coroutine.create(function()
+                entry.func(false --[[async]])
             end)
 
             -- Run the coroutine synchronously.  Cap the duration when running
@@ -1594,7 +1618,8 @@ end
 
 local function normalize_segment_table(t)
     if t[1] then
-        return { text=t[1], color=t[2], altcolor=t[3], isbreak=t.isbreak, condense_callback=t.condense_callback }
+        return { text = t[1], color = t[2], altcolor = t[3], isbreak = t.isbreak, condense_callback = t
+        .condense_callback }
     elseif t.text then
         return t
     end
@@ -1642,7 +1667,7 @@ local function render_module(name, args, try_condense)
             results = nil
         elseif type(a) ~= "table" then
             -- Not a table means func() returned up to 3 strings.
-            results = { { text=a, color=b, altcolor=c } }
+            results = { { text = a, color = b, altcolor = c } }
         elseif type(a[1]) ~= "table" then
             -- A table with no nested tables means func() returned one segment,
             -- but it could be in either of two different formats.
@@ -1682,8 +1707,8 @@ local function render_modules(prompt, side, frame_color, condense, anchors)
         -- Format:  "moduleA=cmd1,moduleA=cmd2,moduleB=cmd3"
         -- Delimiters are space, comma, or semicolon (all are interchangeable).
         oncommands = {}
-        for _,s in ipairs(string.explode(flexprompt.settings.oncommands, " ,;")) do
-            local m,c = s:match("^([^ =]+)=(.+)$")
+        for _, s in ipairs(string.explode(flexprompt.settings.oncommands, " ,;")) do
+            local m, c = s:match("^([^ =]+)=(.+)$")
             if m then
                 m = clink.lower(m)
                 c = clink.lower(c)
@@ -1702,7 +1727,7 @@ local function render_modules(prompt, side, frame_color, condense, anchors)
     local any_condense_callbacks
     local pending_segment
     while true do
-        local s,e,cap = string.find(prompt, "{([^}]*)}", init)
+        local s, e, cap = string.find(prompt, "{([^}]*)}", init)
         if not s then
             break
         end
@@ -1723,7 +1748,7 @@ local function render_modules(prompt, side, frame_color, condense, anchors)
             local n = name
             name = nil
             if _cached_state.command then
-                for _,c in ipairs(oncommands[n:lower()]) do
+                for _, c in ipairs(oncommands[n:lower()]) do
                     if string.equalsi(c, _cached_state.command) then
                         name = n
                         break
@@ -1742,14 +1767,16 @@ local function render_modules(prompt, side, frame_color, condense, anchors)
                     anchors[1] = console.cellcount(out) + 1
                 end
 
-                for _,segment in pairs(results) do
+                for _, segment in pairs(results) do
                     if segment then
                         if segment.isbreak then
                             if out ~= "" then
                                 pending_segment = segment
                             end
                         else
-                            out = out .. next_segment(segment.text, lookup_color(segment.color), segment.altcolor, segment.isbreak, pending_segment)
+                            out = out ..
+                            next_segment(segment.text, lookup_color(segment.color), segment.altcolor, segment.isbreak,
+                                pending_segment)
                             pending_segment = nil
                         end
                         if segment.condense_callback then
@@ -1963,12 +1990,13 @@ local function render_prompts(render_settings, need_anchors, condense)
             anchors[2] = #wizard_prefix + left_frame_len + anchors[2]
         end
         if rightframe1 then
-            anchors[3] = #wizard_prefix + (_wizard and _wizard.width or 0) + - #pad_right_edge - console.cellcount(rightframe1)
+            anchors[3] = #wizard_prefix + (_wizard and _wizard.width or 0) + - #pad_right_edge -
+            console.cellcount(rightframe1)
         end
     end
 
     if try_condense and can_condense and not condense then
-        prompt, rprompt, anchors = render_prompts(render_settings, need_anchors, true--[[condense]])
+        prompt, rprompt, anchors = render_prompts(render_settings, need_anchors, true --[[condense]])
     end
     return prompt, rprompt, anchors
 end
@@ -2031,10 +2059,10 @@ function pf:filter(prompt) -- luacheck: no unused
     end
     prompt, right = render_prompts()
     if prompt then
-        prompt = sgr()..prompt
+        prompt = sgr() .. prompt
     end
     if right then
-        right = sgr()..right
+        right = sgr() .. right
     end
     return prompt
 end
@@ -2117,7 +2145,7 @@ end
 -- The symbol is optional, and is the default symbol for the module.
 function flexprompt.add_module(name, func, symbol)
     if name:find("[^%w]") then
-        error("invalid flexprompt module name '"..name.."'; module names may only contain alphabetic characters.")
+        error("invalid flexprompt module name '" .. name .. "'; module names may only contain alphabetic characters.")
     end
     modules[string.lower(name)] = func
     symbols[name .. "_module"] = symbol
@@ -2133,7 +2161,7 @@ function flexprompt.register_scm(name, funcs, priority)
     elseif type(funcs.test) ~= "function" or type(funcs.info) ~= "function" then
         error("arg #2 table must include 'test' and 'info' functions")
     end
-    table.insert(scms, { type=name, test=funcs.test, info=funcs.info, prio=(priority or 50) })
+    table.insert(scms, { type = name, test = funcs.test, info = funcs.info, prio = (priority or 50) })
     table.sort(scms, function(a, b) return a.prio < b.prio end)
 end
 
@@ -2145,7 +2173,7 @@ function flexprompt.register_vpn(name, func, priority)
     if type(func) ~= "function" then
         error("arg #2 must be a function")
     end
-    table.insert(vpns, { type=name, test=func, prio=(priority or 50) })
+    table.insert(vpns, { type = name, test = func, prio = (priority or 50) })
     table.sort(vpns, function(a, b) return a.prio < b.prio end)
 end
 
@@ -2162,7 +2190,7 @@ function flexprompt.add_color(name, fore, back)
     if type(fore) == "table" then
         flexprompt.colors[name] = fore
     else
-        flexprompt.colors[name] = { fg=fore, bg=back }
+        flexprompt.colors[name] = { fg = fore, bg = back }
     end
 end
 
@@ -2228,7 +2256,7 @@ function flexprompt.parse_arg_token(args, name, altname, include_colon)
     if segmenter and flexprompt.defaultargs and segmenter._current_module then
         -- First check for style-specific default args.
         if segmenter.style then
-            defargs = flexprompt.defaultargs[segmenter._current_module.."|"..segmenter.style]
+            defargs = flexprompt.defaultargs[segmenter._current_module .. "|" .. segmenter.style]
         end
         -- If not found, check for general default args.
         if not defargs then
@@ -2274,7 +2302,7 @@ function flexprompt.parse_arg_keyword(args, name, altname)
     if segmenter and flexprompt.defaultargs and segmenter._current_module then
         -- First check for style-specific default args.
         if segmenter.style then
-            defargs = flexprompt.defaultargs[segmenter._current_module.."|"..segmenter.style]
+            defargs = flexprompt.defaultargs[segmenter._current_module .. "|" .. segmenter.style]
         end
         -- If not found, check for general default args.
         if not defargs then
@@ -2568,7 +2596,7 @@ end
 function flexprompt.set_cwd_color(dir, color)
     flexprompt.settings.cwd_colors = flexprompt.settings.cwd_colors or {}
     dir = clink.lower(path.normalise(path.join(unicode_normalize(dir), "")))
-    table.insert(flexprompt.settings.cwd_colors, { dir=dir, color=color })
+    table.insert(flexprompt.settings.cwd_colors, { dir = dir, color = color })
 end
 
 -- Function to check whether a custom color is available for the specified
@@ -2707,6 +2735,7 @@ function git_config.load(git_dir)
     git_config.config = git_dir and load_ini(path.join(git_dir, 'config')) or nil
     return git_config.config
 end
+
 function git_config.get(section, param)
     if not git_config.config then return end
     if (not param) or (not section) then return end
@@ -2811,7 +2840,7 @@ function flexprompt.is_git_dir(dir)
         end
         -- If no worktree, check if submodule inside a repo.
         if not wks then
-            wks = flexprompt.scan_upwards(dir, function (x)
+            wks = flexprompt.scan_upwards(dir, function(x)
                 return has_dir(x, ".git")
             end)
             if not wks then
@@ -2857,7 +2886,7 @@ function flexprompt.get_git_branch(git_dir)
     if branch_name then
         return branch_name
     else
-        return 'HEAD detached at '..HEAD:sub(1, 7), true, HEAD
+        return 'HEAD detached at ' .. HEAD:sub(1, 7), true, HEAD
     end
 end
 
@@ -2876,7 +2905,7 @@ function flexprompt.get_git_status(no_untracked, include_submodules)
 
     local file = flexprompt.popenyield(git_command("status " .. flags .. " --branch --porcelain"))
     if not file then
-        return { errmsg="[error]" }
+        return { errmsg = "[error]" }
     end
 
     local w_add, w_mod, w_del, w_con, w_unt = 0, 0, 0, 0, 0
@@ -3117,14 +3146,14 @@ function flexprompt.get_vpn_info()
                 for _, name in ipairs(t) do
                     if type(name) == "table" then
                         if type(name.name) == "string" then
-                            table.insert(connections, { name=name.name, type=vpn.type, table=name })
+                            table.insert(connections, { name = name.name, type = vpn.type, table = name })
                         end
                     else
-                        table.insert(connections, { name=name, type=vpn.type })
+                        table.insert(connections, { name = name, type = vpn.type })
                     end
                 end
             elseif type(t) == "string" then
-                table.insert(connections, { name=t, type=vpn.type })
+                table.insert(connections, { name = t, type = vpn.type })
             end
         end
     end
@@ -3184,7 +3213,7 @@ if clink.refilterafterterminalresize then
 end
 
 local old_diag_custom = clink._diag_custom
-clink._diag_custom = function (arg)
+clink._diag_custom = function(arg)
     if old_diag_custom then
         old_diag_custom(arg)
     end
