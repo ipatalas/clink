@@ -31,6 +31,7 @@ local MISE_BIN_KEY = "__MISE_BIN"
 local MISE_BIN = os.getenv(MISE_BIN_KEY)
 local MISE_CLINK_AUTO_ACTIVATE
 local MISE_CLINK_AUTO_ACTIVATE_ARGS
+local MISE_CLINK_ASYNC_HOOK
 
 local MISE_CMD_ACTIVATED_KEY = "__MISE_CLINK_CMD_ACTIVATED"
 local MISE_ACTIVATED_KEY = "__MISE_CLINK_ACTIVATED"
@@ -45,8 +46,13 @@ if not standalone then
         settings.add("mise.auto_activate", true, "Auto activate mise on clink startup",
             "Otherwise, you'd need to run 'eval mise activate pwsh' manually.")
         settings.add("mise.auto_activate_args", "", "Line of args: mise activate " .. BASE_SHELL .. " <ARGS_LINE>")
+        settings.add("mise.async_hook", false, "Asynchronously call hook-env from prompt hook",
+            "Env changes may not be reflected immediately but allows instant prompt. Uses clink.promptcoroutine internally.")
+        settings.add("mise.prompt_hook_priority", 0, "Priority of the mise prompt hook",
+            "Lower number means higher priority (preferred). This setting is only used if async_hook is enabled.")
         MISE_CLINK_AUTO_ACTIVATE = settings.get("mise.auto_activate")
         MISE_CLINK_AUTO_ACTIVATE_ARGS = settings.get("mise.auto_activate_args")
+        MISE_CLINK_ASYNC_HOOK = settings.get("mise.async_hook")
     end
 end
 
@@ -94,23 +100,23 @@ end
 --------------------------------------------------------------------------------
 -- Replace the path to mise.exe if its a shim
 --------------------------------------------------------------------------------
-local function replaceShimMiseExe(shim_mise_exe)
+local function replace_shim_mise_exe(shim_mise_exe)
     return shim_mise_exe:gsub("scoop\\shims\\", "scoop\\apps\\mise\\current\\bin\\")
 end
 
 --------------------------------------------------------------------------------
 -- Find the path to mise.exe using the "__MISE_BIN" env variable.
 --------------------------------------------------------------------------------
-local function findMiseExeFromMiseBin()
-    local mise_bin = MISE_BIN and replaceShimMiseExe(MISE_BIN)
+local function find_mise_exe_from_mise_bin()
+    local mise_bin = MISE_BIN and replace_shim_mise_exe(MISE_BIN)
     return (mise_bin and mise_bin ~= "") and mise_bin
 end
 
 --------------------------------------------------------------------------------
 -- Find the path to mise.exe using the "where" command.
 --------------------------------------------------------------------------------
-local function findMiseExe()
-    local path = findMiseExeFromMiseBin()
+local function find_mise_exe()
+    local path = find_mise_exe_from_mise_bin()
     if path then
         return path
     end
@@ -118,7 +124,7 @@ local function findMiseExe()
     assert(fh, "[ERROR]: 'where' command failed to execute: " .. (err or ""))
     path = fh:read("*l")
     fh:close()
-    return path and replaceShimMiseExe(path) or "mise.exe"
+    return path and replace_shim_mise_exe(path) or "mise.exe"
 end
 
 function load_mise_clink_config(path)
@@ -147,7 +153,7 @@ end
 
 function default_mise_clink_config()
     local config = {
-        mise_path = findMiseExe(),
+        mise_path = find_mise_exe(),
     }
     return config
 end
@@ -161,7 +167,7 @@ end
 local mise_cmd_dir = get_script_dir()
 local mise_clink_config_path = path.join(mise_cmd_dir, "mise.clink.json")
 local mise_clink_config = load_mise_clink_config(mise_clink_config_path) -- TODO: Load config lazily i.e. load when getting any setting
-local mise_path = findMiseExeFromMiseBin() or mise_clink_config.mise_path
+local mise_path = find_mise_exe_from_mise_bin() or mise_clink_config.mise_path
 if not mise_path or mise_path == "" then
     eprint("[ERROR]: mise.exe not found in PATH.")
     mise_path = "mise.exe"
@@ -461,7 +467,7 @@ local function activate(args, env_fh, invoked_from_hook)
             local hook_cmd = string.format('call "%s\\%s" "%s\\mise.cmd" hook-env %s', mise_cmd_dir, EVAL_CMD_NAME,
                 mise_cmd_dir,
                 h_args_line)
-            write_line(hook_cmd)
+            write_line(hook_cmd, env_fh)
             write_env(MISE_ACTIVATED_KEY, 1, env_fh)
             write_env(MISE_HOOK_ENV_ARGS_KEY, h_args_line, env_fh)
         end
@@ -729,6 +735,8 @@ if not standalone then
 
     -- Check for automatic activation of mise
     if not os.getenv(MISE_ACTIVATED_KEY) then
+        -- Running a coroutine to activate mise
+        -- so to not block the shell startup
         local co = coroutine.create(function()
             if MISE_CLINK_AUTO_ACTIVATE then
                 local args = { mise_path, "activate", BASE_SHELL }
@@ -749,13 +757,12 @@ if not standalone then
     -- Hook environment variables if mise is activated
     local function _mise_hook()
         if not os.getenv(MISE_ACTIVATED_KEY) then return end
-        local co = coroutine.create(function()
-            local _, refresh = hook_env(os.getenv(MISE_HOOK_ENV_ARGS_KEY), nil, true)
-            if refresh then
-                clink.refilterprompt()
-            end
-        end)
-        clink.runcoroutineuntilcomplete(co)
+        local info = {}
+        -- Note: shouldn't be run in a coroutine because the prompt must wait
+        -- for the environment to be updated before rendering and taking input
+        info.code, info.refresh = hook_env(os.getenv(MISE_HOOK_ENV_ARGS_KEY), nil, true)
+        -- Handle refresh of the prompt if needed
+        return info
     end
 
     -- Auto-evaluate commands for mise
@@ -801,19 +808,15 @@ if not standalone then
     ------------------------------------------------------------------------------------
     -- Hooks
     ------------------------------------------------------------------------------------
-    if not clink.onbeginedit then
+    if not clink.onbeginedit or not clink.promptfilter then
         print("mise.lua requires a newer version of Clink; please upgrade.")
     else
         clink.onbeginedit(function()
             if not os.getenv(MISE_ACTIVATED_KEY) then return end
-            local auto_activate = settings.get("mise.auto_activate")
-            local auto_activate_args = settings.get("mise.auto_activate_args")
+            local use_async_hook = settings.get("mise.async_hook")
 
-            if auto_activate ~= MISE_CLINK_AUTO_ACTIVATE or auto_activate_args ~= MISE_CLINK_AUTO_ACTIVATE_ARGS then
-                local command = "deactivate"
-                common_subcommand(command, { mise_path, command }, nil, true)
-                MISE_CLINK_AUTO_ACTIVATE = auto_activate
-                MISE_CLINK_AUTO_ACTIVATE_ARGS = auto_activate_args
+            if use_async_hook ~= MISE_CLINK_ASYNC_HOOK then
+                MISE_CLINK_ASYNC_HOOK = use_async_hook
                 clink.reload()
                 return
             end
@@ -823,7 +826,7 @@ if not standalone then
                 local last_deleted = tonumber(os.getenv(MISE_CMD_TEMP_DIRS_LAST_DELETED_KEY) or 0)
                 local threshold_hour = 1
                 local threshold_secs = threshold_hour * 60 * 60
-                if now - last_deleted + threshold_secs > 0 then
+                if now - last_deleted > threshold_secs then
                     local co = coroutine.create(function()
                         _delete_temps(threshold_hour)
                     end)
@@ -831,8 +834,17 @@ if not standalone then
                 end
             end
 
-            _mise_hook()
+            if not MISE_CLINK_ASYNC_HOOK then
+                _mise_hook()
+            end
         end)
+
+        if MISE_CLINK_ASYNC_HOOK then
+            local mise_filter = clink.promptfilter(settings.get("mise.prompt_hook_priority"))
+            function mise_filter:filter()
+                local info = clink.promptcoroutine(_mise_hook)
+            end
+        end
     end
 
     if not clink.onfilterinput then

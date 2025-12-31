@@ -177,6 +177,10 @@ match.substring = True
 # type: boolean
 matchicons.enable = True
 
+# name: Enable mise.lua script to run on Clink startup
+# type: boolean
+mise.enabled = True
+
 # name: Controls spacing before prompt
 # type: enum
 # options: normal,compact,sparse
