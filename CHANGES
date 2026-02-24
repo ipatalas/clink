@@ -2,6 +2,72 @@
 
 ### Releases from [chrisant996/clink](https://github.com/chrisant996/clink) fork
 
+#### v1.9.17
+
+- Fixed detection of `rem` commands; this affects input line coloring, argmatchers, input hints, and match generators.
+- Fixed [#843](https://github.com/chrisant996/clink/issues/843); `clink update` writes malformed `DisplayVersion` which confuses `winget` (regression introduced in v1.9.12).
+
+#### v1.9.16
+
+- Added new Lua API [os.getexesubsystem()](#os.getexesubsystem) which returns whether an executable file uses the console or GUI subsystem.
+- Fixed a garbled prompt if `clink.refilterprompt()` changes the prompt while a Readline mode with a message is active (e.g. `reverse-search-history`).
+- Fixed <kbd>Ctrl</kbd>-<kbd>C</kbd> disabling the suggestion list.
+
+#### v1.9.15
+
+- Fixed the suggestion list to only respond to <kbd>Ctrl</kbd>-<kbd>G</kbd> if it's currently bound to `abort` (the default binding).  This is important to allow custom key bindings for <kbd>Ctrl</kbd>-<kbd>G</kbd> to coexist peacefully with the suggestion list.
+- Fixed incorrect input line coloring in some cases (regression introduced in v1.9.12).
+
+#### v1.9.14
+
+- Changed the suggestion list to ignore trailing whitespace when filtering for duplicate entries.
+- Fixed a case where if an input hint exists for a flag ending in `=` then the input hint didn't get shown until more text was typed (such as after `foo --flag=`).
+
+#### v1.9.13
+
+- Fixed [#838](https://github.com/chrisant996/clink/issues/838); failure to download .cat file when trying to update from v1.9.12 -- a manual update is necessary.
+
+#### v1.9.12
+
+- Added new `suggestionlist.hide_hints` setting to control whether to hide input hints while using the suggestion list (input hints are normally controlled by the `comment_row.show_hints` setting, and are hidden by default while using the suggestion list).
+- Added a type-ahead optimization in popup lists to avoid redundant or unnecessary processing during incremental find or filter input.
+- Improve command line parsing to recognize when an executable exists with the same name as a built-in CMD command (e.g. "echo.exe") and predict whether CMD will run the built-in CMD command or the executable file.  This affects argmatchers, completion, and input line coloring.
+- Changed Clink's built-in updater to verify digital signatures before applying an update.
+- Fixed position of highlights in the suggestion list to consistently use the earliest matching position.
+- Fixed [#835](https://github.com/chrisant996/clink/issues/835); Unicode input is garbled in popup lists (regression introduced in v1.8.0).
+- Fixed edge cases where certain Unicode input could be misinterpreted in popup lists and in `clink-select-complete`.
+- Fixed potential for a buffer overread if invalid UTF8 bytes are encountered.
+- Internal logging improvements.
+
+#### v1.9.11
+
+- Added new Lua API [console.getoriginaltitle()](#console.getoriginaltitle) which gets what the OS considers to be the original console title.
+- Fixed a potential crash if the terminal title is an empty string; an OS API is not behaving as documented (regression introduced in v1.9.10).
+
+#### v1.9.10
+
+- Changed the default binding for <kbd>F7</kbd> to `clink-popup-history` instead of `win-history-list`.
+- Fixed potential for incorrect input line coloring after using `clink-popup-history` to choose a history line.
+- Fixed `win-history-list` with typed input (regression introduced in v1.6.13).
+- Fixed rare issues with the `cmd.admin_title_prefix` setting.
+- Internal logging improvements.
+
+#### v1.9.9
+
+- Fixed [#829](https://github.com/chrisant996/clink/issues/829); attempt to compare nil with number (regression introduced in v1.9.8).
+
+#### v1.9.8
+
+- Changed [os.sleep()](#os.sleep) so it yields when called in a coroutine.
+- Fixed the "Display all...?" prompt in `clink-select-complete` to show up at the right times.
+- Fixed several obscure problems with queued input, e.g. from doskey aliases that include `$T` and from pasting multiline text via the `clink-paste` bindable command.
+- Fixed title bar flicker in Windows Terminal caused by the `cmd.get_errorlevel` setting.
+- Internal improvements for unit tests.
+
+#### v1.9.7
+
+- Fixed [#825](https://github.com/chrisant996/clink/issues/825); multiline pasting via the Clink paste command with `clink.paste_crlf` set to `crlf` could report an unexpected and confusing message (regression introduced in v1.9.6).
+
 #### v1.9.6
 
 - Fixed multiline pasting via Clink's paste command when the `clink.paste_crlf` setting is `crlf` and the pasted input causes the "More?" prompt to appear.
@@ -120,6 +186,7 @@
 - Fixed the `operate-and-get-next` command when the `history.sticky_search` setting is enabled (it fetched the same history entry each time).
 - Fixed a potential crash after <kbd>Enter</kbd>, due to Readline ending a prompt with inconsistent state left over.
 - Fixed two memory management issues in Readline undo handling, which in certain edge cases could potentially cause heap corruption.
+- Fixed popup lists accidentally treating control characters as part of an incremental search (especially problematic when the `terminal.raw_esc` setting is enabled).
 - Fixed [#786](https://github.com/chrisant996/clink/issues/786); `clink autorun` claims the "AutoRun" reg key has a "current user" WOW64 key, but there's no such thing.
 - Fixed [#791](https://github.com/chrisant996/clink/issues/791); in legacy console, clicking on the terminal after using mouse to move scrollbar accidentally scrolls to the last line.
 - Minor improvement to error handling for certain failures in oh-my-posh.
