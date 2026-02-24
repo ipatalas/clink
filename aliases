@@ -4,10 +4,10 @@ clear=cls
 unalias=alias /d $1
 tc.=%COMMANDER_EXE% /O /T /R="%CD%"
 which=where $*
-gl=git log --oneline --graph --decorate  $*
+gl=git log --oneline --graph --decorate $*
 s=git status
 gf=git fetch
-gp=git push
+gp=git push $*
 gpr=git pull -r
 grh=git reset --hard
 log=TortoiseGitProc.exe /command:log
