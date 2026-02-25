@@ -19,14 +19,12 @@ end
 -- Is reset to {} at each onbeginedit.
 local _cached_state = {}
 
-local mod_brightcyan = { fg = "96", bg = "106", extfg = "38;5;44", extbg = "48;5;44" }
-local mod_cyan = { fg = "36", bg = "46", extfg = "38;5;6", extbg = "48;5;6", lean = mod_brightcyan, classic =
-mod_brightcyan }
+local mod_brightcyan = { fg="96", bg="106", extfg="38;5;44", extbg="48;5;44" }
+local mod_cyan = { fg="36", bg="46", extfg="38;5;6", extbg="48;5;6", lean=mod_brightcyan, classic=mod_brightcyan }
 flexprompt.add_color("mod_cyan", mod_cyan)
 
-local keymap_bright = { fg = "94", bg = "104", extfg = "38;5;111", extbg = "48;5;111" }
-local keymap_color = { fg = "34", bg = "44", extfg = "38;5;26", extbg = "48;5;26", lean = keymap_bright, classic =
-keymap_bright }
+local keymap_bright = { fg="94", bg="104", extfg="38;5;111", extbg="48;5;111" }
+local keymap_color = { fg="34", bg="44", extfg="38;5;26", extbg="48;5;26", lean=keymap_bright, classic=keymap_bright }
 flexprompt.add_color("keymap", keymap_color)
 
 --------------------------------------------------------------------------------
@@ -74,19 +72,19 @@ local admin_color_list =
         -- NOTE:  Weird...  Using "38;2;0;102;0" here makes Windows Terminal
         -- fail to draw color emoji later on in the prompt line.  And yet it
         -- doesn't cause a problem when the style is "rainbow".
-        no_admin = { "n", "normal", "green", nil, "38;5;28", nil },
-        admin    = { "a", "admin", "brightred", nil, "38;5;203", nil },
+        no_admin    = { "n", "normal",  "green",     nil,            "38;5;28",      nil },
+        admin       = { "a", "admin",   "brightred", nil,            "38;5;203",     nil },
     },
     rainbow = {
-        no_admin = { "n", "normal", "green", "white", "38;2;0;48;12", "38;5;252" },
-        admin    = { "a", "admin", "red", "brightyellow", "38;2;64;0;0", "38;5;203" },
+        no_admin    = { "n", "normal",  "green",     "white",        "38;2;0;48;12", "38;5;252" },
+        admin       = { "a", "admin",   "red",       "brightyellow", "38;2;64;0;0",  "38;5;203" },
     },
 }
 
 local admin_text_list =
 {
-    no_admin = "normal",
-    admin    = "ADMIN",
+    no_admin    = "normal",
+    admin       = "ADMIN",
 }
 
 local function render_admin(args)
@@ -105,8 +103,7 @@ local function render_admin(args)
     local colors = colorlist[mode]
 
     local fallbacksymbol
-    local icon = flexprompt.parse_arg_token(args, is_admin and "ai" or "ni", is_admin and "adminicon" or "normalicon") or
-    ""
+    local icon = flexprompt.parse_arg_token(args, is_admin and "ai" or "ni", is_admin and "adminicon" or "normalicon") or ""
     if icon == "" then
         icon = flexprompt.get_symbol(mode) or ""
         fallbacksymbol = true
@@ -114,8 +111,7 @@ local function render_admin(args)
 
     local text = ""
     if forcetext or icon == "" then
-        text = flexprompt.parse_arg_token(args, is_admin and "at" or "nt", is_admin and "admintext" or "normaltext") or
-        ""
+        text = flexprompt.parse_arg_token(args, is_admin and "at" or "nt", is_admin and "admintext" or "normaltext") or ""
         if text == "" then
             text = admin_text_list[mode]
         end
@@ -141,7 +137,7 @@ local function admin_onbeginedit()
             local function oninputlinechanged(line)
                 if _cached_state.has_admin_module then
                     local is_admin
-                    for _, entry in ipairs(clink.parseline(line)) do
+                    for _,entry in ipairs(clink.parseline(line)) do
                         local line_state = entry.line_state
                         local cwi = line_state:getcommandwordindex()
                         local cw = cwi and line_state:getword(cwi)
@@ -192,11 +188,11 @@ local anyconnect_cached_info = {}
 
 local anyconnect_colors =
 {
-    connected    = { "c", "connected", fg = "94", bg = "104", extfg = "38;5;12", extbg = "48;5;12", },
-    disconnected = { "d", "disconnected", fg = "92", bg = "102", extfg = "38;5;2", extbg = "48;5;2", },
-    mismatch     = { "m", "mismatch", fg = "91", bg = "101", extfg = "38;5;9", extbg = "48;5;9", },
-    partial      = { "p", "partial", fg = "93", bg = "103", extfg = "38;5;11", extbg = "48;5;11", },
-    unknown      = { "u", "unknown", fg = "37", bg = "47", extfg = "38;5;7", extbg = "48;5;7", },
+    connected       = { "c",   "connected",     fg="94",    bg="104",   extfg="38;5;12",    extbg="48;5;12",    },
+    disconnected    = { "d",   "disconnected",  fg="92",    bg="102",   extfg="38;5;2",     extbg="48;5;2",     },
+    mismatch        = { "m",   "mismatch",      fg="91",    bg="101",   extfg="38;5;9",     extbg="48;5;9",     },
+    partial         = { "p",   "partial",       fg="93",    bg="103",   extfg="38;5;11",    extbg="48;5;11",    },
+    unknown         = { "u",   "unknown",       fg="37",    bg="47",    extfg="38;5;7",     extbg="48;5;7",     },
 }
 
 local function parse_inline_color(args, colors)
@@ -219,10 +215,10 @@ local function collect_anyconnect_info()
     local conns = {}
     for line in file:lines() do
         -- Strip the lines of any whitespaces
-        line = line:match("^%s*(.-)%s*$")
+        line = line:match( "^%s*(.-)%s*$" )
         -- If we have something left add it
         if line ~= "" and #line > 0 then
-            table.insert(conns, line)
+          table.insert(conns, line)
         end
     end
 
@@ -235,7 +231,7 @@ local function collect_anyconnect_info()
         ok = #conns > 0
     end
     if not ok then
-        return { failed = true, finished = true }
+        return { failed=true, finished=true }
     end
 
     -- Check all entries for a given string.  It's better to search for
@@ -244,14 +240,14 @@ local function collect_anyconnect_info()
     -- TODO: Apparently Cisco AnyConnect vpncli.exe doesn't have a way to show
     -- what you are connected to??
     local connected = false
-    for _, candidate in ipairs(conns) do
+    for _,candidate in ipairs(conns) do
         -- VPN messages we care about have state in the string, e.g.:
         --  >> state: Disconnected
         --  >> state: Disconnected
         --  >> state: Disconnected
         --  >> notice: Ready to connect.
         if candidate and #candidate > 0 and candidate:find("state") and
-            not candidate:find("Disconnected") and not candidate:find("Unknown") then
+                not candidate:find("Disconnected") and not candidate:find("Unknown") then
             -- If at least one "state" line doesn't say "Disconnected" or
             -- "Unknown", then consider it to be connected.
             connected = true
@@ -265,7 +261,7 @@ local function collect_anyconnect_info()
 
     -- Save connection status as well as information about the HTTP_PROXY and
     -- HTTPS_PROXY env variables (if defined and filled in or not).
-    return { connection = connected, proxy = proxy, proxys = proxys, finished = true }
+    return { connection=connected, proxy=proxy, proxys=proxys, finished=true }
 end
 
 local function render_anyconnect(args)
@@ -274,7 +270,7 @@ local function render_anyconnect(args)
     local wizard = flexprompt.get_wizard_state()
 
     if wizard then
-        info = { connection = false, proxy = true, proxys = false, finished = true }
+        info = { connection=false, proxy=true, proxys=false, finished=true }
     else
         -- Get connection status.
         info, refreshing = flexprompt.prompt_info(anyconnect_cached_info, nil, nil, collect_anyconnect_info)
@@ -374,15 +370,15 @@ local rainbow_battery_colors =
 
 local battery_icon_series =
 {
-    [true] = -- Charging.
+    [true] =    -- Charging.
     {
-        nerdfonts2 = { "", "", "", "", "", "", "" },
-        nerdfonts3 = { "󰢟", "󰢜", "󰂆", "󰂇", "󰂈", "󰢝", "󰂉", "󰢞", "󰂊", "󰂋", "󰂅" },
+        nerdfonts2 = { "","","","","","","" },
+        nerdfonts3 = { "󰢟","󰢜","󰂆","󰂇","󰂈","󰢝","󰂉","󰢞","󰂊","󰂋","󰂅" },
     },
-    [false] = -- Not charging.
+    [false] =   -- Not charging.
     {
-        nerdfonts2 = { "", "", "", "", "", "", "", "", "", "", "" },
-        nerdfonts3 = { "󰂎", "󰁺", "󰁻", "󰁼", "󰁽", "󰁾", "󰁿", "󰂀", "󰂁", "󰂂", "󰁹" },
+        nerdfonts2 = { "","","","","","","","","","","" },
+        nerdfonts3 = { "󰂎","󰁺","󰁻","󰁼","󰁽","󰁾","󰁿","󰂀","󰂁","󰂂","󰁹" },
     },
 }
 
@@ -423,7 +419,7 @@ local function get_battery_status(levelicon, onlyicon)
     end
 
     if not onlyicon then
-        batt_symbol = level .. batt_symbol
+        batt_symbol = level..batt_symbol
     end
 
     return batt_symbol, level
@@ -445,7 +441,7 @@ end
 local prev_battery_status, prev_battery_level
 local function update_battery_prompt(levelicon, onlyicon)
     while true do
-        local status, level = get_battery_status(levelicon, onlyicon)
+        local status,level = get_battery_status(levelicon, onlyicon)
         if prev_battery_status ~= status or prev_battery_level ~= level then
             clink.refilterprompt()
         end
@@ -459,12 +455,12 @@ local function render_battery(args)
     local show = tonumber(flexprompt.parse_arg_token(args, "s", "show") or "100")
     local onlyicon = flexprompt.parse_arg_keyword(args, "oi", "onlyicon")
     local levelicon = flexprompt.parse_arg_keyword(args, "li", "levelicon")
-    local batteryStatus, level = get_battery_status(levelicon, onlyicon)
+    local batteryStatus,level = get_battery_status(levelicon, onlyicon)
     prev_battery_status = batteryStatus
     prev_battery_level = level
 
     if clink.addcoroutine and flexprompt.settings.battery_idle_refresh ~= false and not _cached_state.battery_coroutine then
-        local t = coroutine.create(function()
+        local t = coroutine.create(function ()
             update_battery_prompt(levelicon, onlyicon)
         end)
         _cached_state.battery_coroutine = t
@@ -518,7 +514,7 @@ local function render_break(args)
     local colors = flexprompt.parse_arg_token(args, "c", "color")
     local color = flexprompt.colors.default
     color = flexprompt.parse_colors(colors, color)
-    return { "", color, isbreak = true }
+    return { "", color, isbreak=true }
 end
 
 --------------------------------------------------------------------------------
@@ -656,7 +652,7 @@ local function process_cwd_string(cwd, git_wks, args)
                 local rootcolor = flexprompt.parse_arg_token(args, "rc", "rootcolor")
                 local parent = cwd:sub(1, #cwd - #smart_dir)
                 if shorten and (type(shorten) ~= "number" or console.cellcount(cwd) > shorten) then
-                    parent = abbreviate_parents(parent, true --[[all]])
+                    parent = abbreviate_parents(parent, true--[[all]])
                     if shorten ~= "smartroot" and shorten ~= "rootsmart" then
                         smart_dir = abbreviate_parents(smart_dir)
                     end
@@ -703,17 +699,17 @@ local function render_cwd(args)
     text = flexprompt.append_text(sym, text)
 
     local results = {
-        text = text,
-        color = color,
-        altcolor = altcolor,
+        text=text,
+        color=color,
+        altcolor=altcolor,
     }
 
     if not shortened then
-        results.condense_callback = function()
+        results.condense_callback = function ()
             return {
-                text = flexprompt.append_text(sym, flexprompt.abbrev_path(cwd, true)),
-                color = color,
-                altcolor = altcolor,
+                text=flexprompt.append_text(sym, flexprompt.abbrev_path(cwd, true)),
+                color=color,
+                altcolor=altcolor,
             }
         end
     end
@@ -738,8 +734,7 @@ if rl.setbinding then
         rl.setbinding([["\e\C-T"]], [["luafunc:flexprompt_toggle_tenths"]])
     end
     if rl.describemacro then
-        rl.describemacro([["luafunc:flexprompt_toggle_tenths"]],
-            "Toggle displaying tenths of seconds for duration in the prompt")
+        rl.describemacro([["luafunc:flexprompt_toggle_tenths"]], "Toggle displaying tenths of seconds for duration in the prompt")
     end
 end
 
@@ -998,23 +993,23 @@ local function collect_git_info(no_untracked, includeSubmodules)
 
     local submodule = git_dir and git_dir:find(path.join(wks_dir, "modules\\"), 1, true) == 1
 
-    maybe_git_fetch({ type = "git", root = git_dir })
+    maybe_git_fetch({ type="git", root=git_dir })
 
     local status = flexprompt.get_git_status(no_untracked, includeSubmodules)
     local conflict = flexprompt.get_git_conflict()
     local ahead, behind = flexprompt.get_git_ahead_behind()
-    return { status = status, conflict = conflict, ahead = ahead, behind = behind, submodule = submodule, finished = true }
+    return { status=status, conflict=conflict, ahead=ahead, behind=behind, submodule=submodule, finished=true }
 end
 
 local git_colors =
 {
-    clean       = { "c", "clean", "vcs_clean", },
-    conflict    = { "!", "conflict", "vcs_conflict", },
-    dirty       = { "d", "dirty", "vcs_dirty", },
-    remote      = { "r", "remote", "vcs_remote", },
-    staged      = { "s", "staged", "vcs_staged", },
-    unknown     = { "u", "unknown", "vcs_unknown", },
-    unpublished = { "up", "unpublished", "vcs_unpublished", },
+    clean       = { "c",   "clean",        "vcs_clean",         },
+    conflict    = { "!",   "conflict",     "vcs_conflict",      },
+    dirty       = { "d",   "dirty",        "vcs_dirty",         },
+    remote      = { "r",   "remote",       "vcs_remote",        },
+    staged      = { "s",   "staged",       "vcs_staged",        },
+    unknown     = { "u",   "unknown",      "vcs_unknown",       },
+    unpublished = { "up",  "unpublished",  "vcs_unpublished",   },
 }
 
 local function render_git(args)
@@ -1053,7 +1048,7 @@ local function render_git(args)
         -- Collect or retrieve cached info.
         local noUntracked = flexprompt.parse_arg_keyword(args, "nu", "nountracked")
         local includeSubmodules = flexprompt.parse_arg_keyword(args, "sm", "submodules")
-        info, refreshing = flexprompt.prompt_info(git, git_dir, branch, function()
+        info, refreshing = flexprompt.prompt_info(git, git_dir, branch, function ()
             return collect_git_info(noUntracked, includeSubmodules)
         end)
 
@@ -1108,8 +1103,8 @@ local function render_git(args)
 
     local text = make_text(branch)
     local segment = { text, color, altcolor }
-    local condensed_segment = { color = color, altcolor = altcolor }
-    segment.condense_callback = function()
+    local condensed_segment = { color=color, altcolor=altcolor }
+    segment.condense_callback = function ()
         local b = branch
         local target = math.max(console.getwidth() / 4, 20)
         if console.cellcount(branch) > target then
@@ -1160,8 +1155,8 @@ end
 
 local hg_colors =
 {
-    clean = { "c", "clean", "vcs_clean" },
-    dirty = { "d", "dirty", "vcs_dirty" },
+    clean       = { "c",  "clean",  "vcs_clean" },
+    dirty       = { "d",  "dirty",  "vcs_dirty" },
 }
 
 local hg = {}
@@ -1173,11 +1168,11 @@ local function collect_hg_info()
     pipe:close()
 
     local dirty = output ~= ""
-    return { dirty = dirty }
+    return { dirty=dirty }
 end
 
 local function get_hg_dir(dir)
-    return flexprompt.scan_upwards(dir, function(dir)  -- luacheck: ignore 432
+    return flexprompt.scan_upwards(dir, function (dir) -- luacheck: ignore 432
         -- Return if it's a hg (Mercurial) dir.
         return flexprompt.has_dir(dir, ".hg")
     end)
@@ -1198,7 +1193,7 @@ local function render_hg(args)
     while n > 0 and output:find("^%s", n) do n = n - 1 end
     local branch = output:sub(1, n)
     if not branch then return end
-    if string.sub(branch, 1, 7) == "abort: " then return end
+    if string.sub(branch,1,7) == "abort: " then return end
     if string.find(branch, "is not recognized") then return end
 
     -- Collect or retrieve cached info.
@@ -1347,7 +1342,7 @@ local function collect_k8s_info()
     repeat
         p = flexprompt.popenyield("kubectl.exe config view --minify 2>nul", "rt")
         if not p then
-            return { text = "(error)" }
+            return { text="(error)" }
         end
 
         local any_lines
@@ -1361,7 +1356,7 @@ local function collect_k8s_info()
         end
         p:close()
         if not any_lines then
-            return { text = "(error)" }
+            return { text="(error)" }
         end
 
         p = flexprompt.popenyield("kubectl.exe config current-context 2>nul", "rt")
@@ -1378,7 +1373,7 @@ local function collect_k8s_info()
         p:close()
     until true
 
-    return { context = context, namespace = ns }
+    return { context=context, namespace=ns }
 end
 
 local function render_k8s(args)
@@ -1424,43 +1419,38 @@ end
 local mvn = {}
 
 local function collect_mvn_info()
-    local handle = flexprompt.popenyield(
-    'xmllint --xpath "//*[local-name()=\'project\']/*[local-name()=\'groupId\']/text()" pom.xml 2>NUL')
+    local handle = flexprompt.popenyield('xmllint --xpath "//*[local-name()=\'project\']/*[local-name()=\'groupId\']/text()" pom.xml 2>NUL')
     if not handle then return end
     local package_group = handle:read("*a") or ""
     handle:close()
     if package_group == "" then
-        handle = flexprompt.popenyield(
-        'xmllint --xpath "//*[local-name()=\'project\']/*[local-name()=\'parent\']/*[local-name()=\'groupId\']/text()" pom.xml 2>NUL')
+        handle = flexprompt.popenyield('xmllint --xpath "//*[local-name()=\'project\']/*[local-name()=\'parent\']/*[local-name()=\'groupId\']/text()" pom.xml 2>NUL')
         if not handle then return end
         package_group = handle:read("*a") or ""
         handle:close()
     end
 
-    handle = flexprompt.popenyield(
-    'xmllint --xpath "//*[local-name()=\'project\']/*[local-name()=\'artifactId\']/text()" pom.xml 2>NUL')
+    handle = flexprompt.popenyield('xmllint --xpath "//*[local-name()=\'project\']/*[local-name()=\'artifactId\']/text()" pom.xml 2>NUL')
     if not handle then return end
     local package_artifact = handle:read("*a") or ""
     handle:close()
 
-    handle = flexprompt.popenyield(
-    'xmllint --xpath "//*[local-name()=\'project\']/*[local-name()=\'version\']/text()" pom.xml 2>NUL')
+    handle = flexprompt.popenyield('xmllint --xpath "//*[local-name()=\'project\']/*[local-name()=\'version\']/text()" pom.xml 2>NUL')
     if not handle then return end
     local package_version = handle:read("*a") or ""
     handle:close()
     if package_version == "" then
-        handle = flexprompt.popenyield(
-        'xmllint --xpath "//*[local-name()=\'project\']/*[local-name()=\'parent\']/*[local-name()=\'version\']/text()" pom.xml 2>NUL')
+        handle = flexprompt.popenyield('xmllint --xpath "//*[local-name()=\'project\']/*[local-name()=\'parent\']/*[local-name()=\'version\']/text()" pom.xml 2>NUL')
         if not handle then return end
         package_version = handle:read("*a") or ""
         handle:close()
     end
 
-    return { package_group = package_group, package_artifact = package_artifact, package_version = package_version }
+    return { package_group=package_group, package_artifact=package_artifact, package_version=package_version }
 end
 
 local function get_pom_xml_dir(dir)
-    return flexprompt.scan_upwards(dir, function(dir)  -- luacheck: ignore 432
+    return flexprompt.scan_upwards(dir, function (dir) -- luacheck: ignore 432
         local pom_file = path.join(dir, "pom.xml")
         -- More efficient than opening the file.
         if os.isfile(pom_file) then return dir end
@@ -1473,8 +1463,7 @@ local function render_maven(args)
 
     local info = flexprompt.prompt_info(mvn, mvn_dir, nil, collect_mvn_info)
 
-    local text = (info.package_group or "") ..
-    ":" .. (info.package_artifact or "") .. ":" .. (info.package_version or "")
+    local text = (info.package_group or "") .. ":" .. (info.package_artifact or "") .. ":" .. (info.package_version or "")
     text = flexprompt.append_text(flexprompt.get_module_symbol(), text)
 
     local color, altcolor = parse_color_token(args, { "c", "color", "mod_cyan" })
@@ -1551,7 +1540,7 @@ end
 --  - alt_color_name is optional; it is the text color in rainbow style.
 
 local function get_package_json_file(dir)
-    return flexprompt.scan_upwards(dir, function(dir)  -- luacheck: ignore 432
+    return flexprompt.scan_upwards(dir, function (dir) -- luacheck: ignore 432
         local file = io.open(path.join(dir, "package.json"))
         if file then return file end
     end)
@@ -1657,7 +1646,7 @@ local function get_virtual_env(env_var)
 end
 
 local function has_py_files(dir)
-    return flexprompt.scan_upwards(dir, function(dir)           -- luacheck: ignore 432
+    return flexprompt.scan_upwards(dir, function (dir) -- luacheck: ignore 432
         for _ in pairs(os.globfiles(path.join(dir, "*.py"))) do -- luacheck: ignore 512
             return true
         end
@@ -1715,13 +1704,13 @@ end
 
 local scm_colors =
 {
-    clean       = { "c", "clean", "vcs_clean", },
-    conflict    = { "!", "conflict", "vcs_conflict", },
-    dirty       = { "d", "dirty", "vcs_dirty", },
-    remote      = { "r", "remote", "vcs_remote", },
-    staged      = { "s", "staged", "vcs_staged", },
-    unknown     = { "u", "unknown", "vcs_unknown", },
-    unpublished = { "up", "unpublished", "vcs_unpublished", },
+    clean       = { "c",   "clean",        "vcs_clean",         },
+    conflict    = { "!",   "conflict",     "vcs_conflict",      },
+    dirty       = { "d",   "dirty",        "vcs_dirty",         },
+    remote      = { "r",   "remote",       "vcs_remote",        },
+    staged      = { "s",   "staged",       "vcs_staged",        },
+    unknown     = { "u",   "unknown",      "vcs_unknown",       },
+    unpublished = { "up",  "unpublished",  "vcs_unpublished",   },
 }
 
 local function render_scm(args)
@@ -1749,14 +1738,12 @@ local function render_scm(args)
 
         -- Collect or retrieve cached info.
         local flags = {}
-        flags.no_ahead_behind = flexprompt.settings.no_ahead_behind or
-        flexprompt.parse_arg_keyword(args, "nab", "noaheadbehind")
+        flags.no_ahead_behind = flexprompt.settings.no_ahead_behind or flexprompt.parse_arg_keyword(args, "nab", "noaheadbehind")
         flags.no_conflict = flexprompt.settings.no_conflict or flexprompt.parse_arg_keyword(args, "nc", "noconflict")
-        flags.no_submodules = flexprompt.settings.no_submodules or
-        flexprompt.parse_arg_keyword(args, "ns", "nosubmodules")
+        flags.no_submodules = flexprompt.settings.no_submodules or flexprompt.parse_arg_keyword(args, "ns", "nosubmodules")
         flags.no_untracked = flexprompt.settings.no_untracked or flexprompt.parse_arg_keyword(args, "nu", "nountracked")
         flags.show_remote = not flexprompt.settings.no_remote and flexprompt.parse_arg_keyword(args, "sr", "showremote")
-        info, refreshing = flexprompt.prompt_info(cached_scm, detected.root, detected.branch, function()
+        info, refreshing = flexprompt.prompt_info(cached_scm, detected.root, detected.branch, function ()
             return collect_scm_info(detected, flags)
         end)
 
@@ -1822,7 +1809,7 @@ local function render_scm(args)
     flexprompt.settings.no_graphics = old_no_graphics
 
     if module_sym and module_sym ~= "" then
-        module_sym = flexprompt.get_icon(string.lower(info.type .. "_module"))
+        module_sym = flexprompt.get_icon(string.lower(info.type.."_module"))
         if not module_sym or module_sym == "" then
             module_sym = info.type
         elseif refreshing then
@@ -1847,8 +1834,8 @@ local function render_scm(args)
 
     local text = make_text(branch)
     local segment = { text, color, altcolor }
-    local condensed_segment = { color = color, altcolor = altcolor }
-    segment.condense_callback = function()
+    local condensed_segment = { color=color, altcolor=altcolor }
+    segment.condense_callback = function ()
         local b = branch
         local target = math.max(console.getwidth() / 4, 20)
         if console.cellcount(branch) > target then
@@ -1902,13 +1889,13 @@ local svn = {}
 
 local svn_colors =
 {
-    clean   = { "c", "clean", "vcs_clean" },
-    dirty   = { "d", "dirty", "vcs_conflict" },
-    unknown = { "u", "unknown", "vcs_unknown" },
+    clean       = { "c",  "clean",    "vcs_clean" },
+    dirty       = { "d",  "dirty",    "vcs_conflict" },
+    unknown     = { "u",  "unknown",  "vcs_unknown" },
 }
 
 local function get_svn_dir(dir)
-    return flexprompt.scan_upwards(dir, function(dir)  -- luacheck: ignore 432
+    return flexprompt.scan_upwards(dir, function (dir) -- luacheck: ignore 432
         -- Return if it's a svn (Subversion) dir.
         local has = flexprompt.has_dir(dir, ".svn")
         if has then return has end
@@ -1922,7 +1909,7 @@ local function get_svn_branch()
         local m = line:match("^Relative URL:")
         if m then
             file:close()
-            return line:sub(line:find("/") + 1, line:len())
+            return line:sub(line:find("/")+1,line:len())
         end
     end
     file:close()
@@ -1945,7 +1932,7 @@ local function collect_svn_info()
         colors = svn_colors.dirty
         dirty = true
     end
-    return { colors = colors, dirty = dirty }
+    return { colors=colors, dirty=dirty }
 end
 
 local function render_svn(args)
@@ -1987,7 +1974,7 @@ local function render_time(args)
         color = dim and "realbrightblack" or "realwhite"
         altcolor = dim and "realwhite" or "realblack"
     else
-        color = { fg = "36", bg = "46", extfg = "38;5;6", extbg = "48;5;6" }
+        color = { fg="36", bg="46", extfg="38;5;6", extbg="48;5;6" }
     end
     color, altcolor = flexprompt.parse_colors(colors, color, altcolor)
 
@@ -2035,7 +2022,7 @@ local function render_user(args)
         computer = prefix .. computer
     end
 
-    local text = user .. computer
+    local text = user..computer
     if text and #text > 0 then
         text = flexprompt.append_text(flexprompt.get_module_symbol(), text)
     end
@@ -2062,7 +2049,7 @@ local function collect_vpn_info()
     -- Concatenate connection names.
     local line = ""
     local count = 0
-    for _, c in ipairs(conns) do
+    for _,c in ipairs(conns) do
         if count > 0 then
             line = line .. ","
         end
@@ -2073,7 +2060,7 @@ local function collect_vpn_info()
         end
         line = line .. c.name
     end
-    return { connection = line }
+    return { connection=line }
 end
 
 local function render_vpn(args)
@@ -2082,7 +2069,7 @@ local function render_vpn(args)
     local wizard = flexprompt.get_wizard_state()
 
     if wizard then
-        info = { connection = "WORKVPN", finished = true }
+        info = { connection="WORKVPN", finished=true }
     else
         -- Get connection status.
         info, refreshing = flexprompt.prompt_info(vpn_cached_info, nil, nil, collect_vpn_info)
@@ -2171,7 +2158,7 @@ local function info_hg(dir, tested_info, flags) -- luacheck: no unused
         -- work reliably.
         local pipe = io.popenyield("set LC_MESSAGES=C& 2>&1 hg summary")
         if pipe then
-            local working = { add = 0, modify = 0, delete = 0, conflict = 0, untracked = 0 }
+            local working = { add=0, modify=0, delete=0, conflict=0, untracked=0 }
             for line in pipe:lines() do
                 local m = line:match("^branch:%s+(.*)")
                 if m then
@@ -2213,7 +2200,7 @@ local function info_hg(dir, tested_info, flags) -- luacheck: no unused
                     working.untracked = 0
                 end
             end
-            for _, v in pairs(working) do
+            for _,v in pairs(working) do
                 if v > 0 then
                     info.status = info.status or {}
                     info.status.working = working
@@ -2258,7 +2245,7 @@ local function info_svn(dir, tested_info, flags) -- luacheck: no unused
         end
         local pipe = io.popenyield(command)
         if pipe then
-            local working = { add = 0, modify = 0, delete = 0, conflict = 0, untracked = 0 }
+            local working = { add=0, modify=0, delete=0, conflict=0, untracked=0 }
             for line in pipe:lines() do
                 local s = line:match("^([AMDCR?!~])")
                 if s then
@@ -2286,7 +2273,7 @@ local function info_svn(dir, tested_info, flags) -- luacheck: no unused
             if working and working.conflict > 0 then
                 info.unresolved = working.conflict
             end
-            for _, v in pairs(working) do
+            for _,v in pairs(working) do
                 if v > 0 then
                     info.status = info.status or {}
                     info.status.working = working
@@ -2354,46 +2341,46 @@ clink.onbeginedit(builtin_modules_onbeginedit)
 --------------------------------------------------------------------------------
 -- Initialize the built-in modules.
 
-flexprompt.add_module("anyconnect", render_anyconnect)
-flexprompt.add_module("battery", render_battery)
-flexprompt.add_module("break", render_break)
-flexprompt.add_module("conda", render_conda, { nerdfonts2 = { "🅒", "🅒" }, nerdfonts3 = { "🅒", "🅒" } })
-flexprompt.add_module("cwd", render_cwd, { coloremoji = "📁", nerdfonts2 = { "", " " }, nerdfonts3 = { "", " " } })
-flexprompt.add_module("duration", render_duration, { coloremoji = "⌛", nerdfonts2 = { "", " " }, nerdfonts3 = { "", " " } })
-flexprompt.add_module("env", render_env)
-flexprompt.add_module("exit", render_exit)
-flexprompt.add_module("git", render_git, { nerdfonts2 = { "", " " }, nerdfonts3 = { "", " " } })
-flexprompt.add_module("hg", render_hg)
-flexprompt.add_module("histlabel", render_histlabel, { nerdfonts2 = { "", " " }, nerdfonts3 = { "", " " } })
-flexprompt.add_module("k8s", render_k8s, { nerdfonts2 = { "ﴱ", "ﴱ " }, nerdfonts3 = { "󰠳", "󰠳 " } })
-flexprompt.add_module("maven", render_maven)
-flexprompt.add_module("npm", render_npm)
-flexprompt.add_module("python", render_python, { nerdfonts2 = { "", " " }, nerdfonts3 = { "󰌠", "󰌠 " } })
-flexprompt.add_module("scm", render_scm, { "scm" }) -- Placeholder to check icon config.
-flexprompt.add_module("svn", render_svn)
-flexprompt.add_module("time", render_time, { coloremoji = "🕒", nerdfonts2 = { "", "" }, nerdfonts3 = { "", "" } }) -- Note: nerdfonts are always mono width for this.
-flexprompt.add_module("user", render_user, { coloremoji = "🙍", nerdfonts2 = { "", " " }, nerdfonts3 = { "", " " } })
-flexprompt.add_module("vpn", render_vpn, { coloremoji = "☁️", nerdfonts2 = { "", " " }, nerdfonts3 = { "", " " } })
+flexprompt.add_module( "anyconnect",    render_anyconnect                   )
+flexprompt.add_module( "battery",       render_battery                      )
+flexprompt.add_module( "break",         render_break                        )
+flexprompt.add_module( "conda",         render_conda,       { nerdfonts2={"🅒","🅒"}, nerdfonts3={"🅒","🅒"} } )
+flexprompt.add_module( "cwd",           render_cwd,         { coloremoji="📁", nerdfonts2={""," "}, nerdfonts3={""," "} } )
+flexprompt.add_module( "duration",      render_duration,    { coloremoji="⌛", nerdfonts2={""," "}, nerdfonts3={""," "} } )
+flexprompt.add_module( "env",           render_env                          )
+flexprompt.add_module( "exit",          render_exit                         )
+flexprompt.add_module( "git",           render_git,         { nerdfonts2={""," "}, nerdfonts3={""," "} } )
+flexprompt.add_module( "hg",            render_hg                           )
+flexprompt.add_module( "histlabel",     render_histlabel,   { nerdfonts2={""," "}, nerdfonts3={""," "} } )
+flexprompt.add_module( "k8s",           render_k8s,         { nerdfonts2={"ﴱ","ﴱ "}, nerdfonts3={"󰠳","󰠳 "} } )
+flexprompt.add_module( "maven",         render_maven                        )
+flexprompt.add_module( "npm",           render_npm                          )
+flexprompt.add_module( "python",        render_python,      { nerdfonts2={""," "}, nerdfonts3={"󰌠","󰌠 "} } )
+flexprompt.add_module( "scm",           render_scm,         { "scm" }       ) -- Placeholder to check icon config.
+flexprompt.add_module( "svn",           render_svn                          )
+flexprompt.add_module( "time",          render_time,        { coloremoji="🕒", nerdfonts2={"",""}, nerdfonts3={"",""} } ) -- Note: nerdfonts are always mono width for this.
+flexprompt.add_module( "user",          render_user,        { coloremoji="🙍", nerdfonts2={""," "}, nerdfonts3={""," "} } )
+flexprompt.add_module( "vpn",           render_vpn,         { coloremoji="☁️", nerdfonts2={""," "}, nerdfonts3={""," "} } )
 
 if os.isuseradmin then
-    flexprompt.add_module("admin", render_admin)
+flexprompt.add_module( "admin",         render_admin                        )
 end
 
 if clink.onaftercommand then
-    flexprompt.add_module("keymap", render_keymap, { nerdfonts2 = { "", " " }, nerdfonts3 = { "", " " } })
+flexprompt.add_module( "keymap",        render_keymap,      { nerdfonts2={""," "}, nerdfonts3={""," "} } )
 end
 
 if rl.insertmode then
-    flexprompt.add_module("overtype", render_overtype)
+flexprompt.add_module( "overtype",      render_overtype                     )
 end
 
 if rl.ismodifiedline then
-    flexprompt.add_module("modmark", render_modmark)
+flexprompt.add_module( "modmark",       render_modmark                      )
 end
 
-flexprompt.register_scm("git", { test = test_git, info = info_git }, 20)
-flexprompt.register_scm("hg", { test = test_hg, info = info_hg }, 40)
-flexprompt.register_scm("svn", { test = test_svn, info = info_svn }, 41)
+flexprompt.register_scm("git", { test=test_git, info=info_git }, 20)
+flexprompt.register_scm("hg",  { test=test_hg,  info=info_hg  }, 40)
+flexprompt.register_scm("svn", { test=test_svn, info=info_svn }, 41)
 
 flexprompt.register_vpn("rasdial", vpn_rasdial, 60)
 

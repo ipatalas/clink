@@ -35,13 +35,14 @@ Script Name | Description
 [abbr.lua](abbr.lua) | Reads abbreviations and corresponding expansions from a .abbr file.  Pressing <kbd>Space</kbd> after an abbreviation replaces it with the corresponding expansion.  Refer to the usage information in the script file for details.
 [auto_argmatcher.lua](auto_argmatcher.lua) | Reads a config file and automatically creates argmatchers (completion generators) for specified programs by parsing their help text output.  Refer to the usage information in the script file for details.
 [autopull.lua](autopull.lua) | Periodically runs `git pull` in a configurable list of directories.  Refer to the usage information in the script file for details.
-[codepoints_hinter.lua](codepoints_hinter.lua) | Can display a hint showing the Unicode codepoints for the non-ASCII character at the cursor position.  Run `clink set codepoints.show_preview true` to enable it.  If not already bound to something else, <kbd>Alt</kbd>-<kbd>F1</kbd> toggles immediate display of codepoints, even if the `codepoints.show_preview` setting is false (the <kbd>Alt</kbd>-<kbd>F1</kbd> key binding requires Clink v1.7.5 or newer).  Refer to the usage information in the script file for details.
+[codepoints_hinter.lua](codepoints_hinter.lua) | Can display a hint showing the Unicode codepoints for the non-ASCII character at the cursor position, if the `comment_row.show_hints` setting is enabled.  If not already bound to something else, <kbd>Alt</kbd>-<kbd>F1</kbd> toggles immediate display of codepoints, even if the `codepoints.show_preview` setting is false (the key binding requires Clink v1.7.5 or newer).  Refer to the usage information in the script file for details.
 [cwdhistory.lua](cwdhistory.lua) | Adds cwd history that is saved between sessions.  Use <kbd>Alt</kbd>-<kbd>Ctrl</kbd>-<kbd>PgUp</kbd> to show the cwd history popup list.  Refer to the usage information in the script file for details.
 [divider.lua](divider.lua) | Automatically prints a divider line before and after running certain commands.  The list of commands is configurable.  Refer to the usage information in the script file for details.
-[doskey_hinter.lua](doskey_hinter.lua) | Can display a hint showing the definition of the doskey alias at the cursor position.  Run `clink set doskey.show_preview true` to enable it.  Refer to the usage information in the script file for details.
+[doskey_hinter.lua](doskey_hinter.lua) | Can display a hint showing the definition of the doskey alias at the cursor position, if the `comment_row.show_hints` setting is enabled.  Refer to the usage information in the script file for details.
 [doskey_popup.lua](doskey_popup.lua) | Use <kbd>Ctrl</kbd>-<kbd>X</kbd>,<kbd>D</kbd> to show a list of doskey aliases and their expansions.  Refer to the usage information in the script file for details.
 [fuzzy_history.lua](fuzzy_history.lua) | Adds an autosuggest strategy `fuzzy_history` which can ignore path or file extension when providing suggestions from the command history list.  Refer to the usage information in the script file for details.
-[fzf.lua](fzf.lua) | Adds support for using [fzf](https://github.com/junegunn/fzf) with Clink.  Refer to the usage information in the script file for how to activate key bindings.  (This is the script from the [clink-fzf](https://github.com/chrisant996/clink-fzf) repo.)
+[fzf.lua](fzf.lua) | Adds support for using [fzf](https://github.com/junegunn/fzf) with Clink.  Refer to the usage information in the script file for how to activate key bindings.  (This is a copy from the [clink-fzf](https://github.com/chrisant996/clink-fzf) repo.)
+[fzf_git.lua](fzf_git.lua) | Adds support for using [fzf](https://github.com/junegunn/fzf) to browse git objects.  Refer to the usage information in the script file for more information.  (This is a copy from the [clink-fzf](https://github.com/chrisant996/clink-fzf) repo.)
 [highlight_envvars.lua](highlight_envvars.lua) | Can highlight environment variables in the command line, and/or can display a hint showing the value of the environment variable at the cursor.  Use <code>clink set color.envvars <em>your color here</em></code> to set a color (it only highlights them if a color is set).  Use <code>clink set highlight_envvars.show_preview true` to enable the display hint.
 [history_labels.lua](history_labels.lua) | Can automatically switch to a different history file based on the current directory.  Refer to the usage information in the script file for how to configure directories and history files.
 [i.lua](i.lua) | Adds an `i {dir} {command}` command that changes to _{dir}_, runs _{command}_, and changes back to the original directory.  Refer to the usage information in the script file for details and other features.
@@ -49,19 +50,21 @@ Script Name | Description
 [matchicons.lua](matchicons.lua) | Can show nerd font icons in file and directory completions.  Run `clink set matchicons.enable true` to enable it.  Refer to the usage information in the script file for details.
 [noclink.lua](noclink.lua) | This and the [noclink.cmd](noclink.cmd) script let you temporarily disable/reenable Clink (or Clink's prompt filtering).  Run `noclink -?` for help.
 [scmapi.lua](scmapi.lua) | Allows other scripts to automatically add support for other source control systems into [Clink's Lua `git` APIs](https://chrisant996.github.io/clink/clink.html#git).
-[scmhg.lua](scmhg.lua) | Uses scmapi.lua to add support for `hg` ([Mercurial](https://www.mercurial-scm.org/)).  Disabled by default; refer to the usage info in the script for how to enable it.
-[scmsvn.lua](scmsvn.lua) | Uses scmapi.lua to add support for `svn` ([Subversion](https://subversion.apache.org/)).  Disabled by default; refer to the usage info in the script for how to enable it.
+[scmhg.lua](scmhg.lua) | Uses scmapi.lua to add support for `hg` ([Mercurial](https://www.mercurial-scm.org/)).  Disabled by default; refer to the usage information in the script for how to enable it.
+[scmsvn.lua](scmsvn.lua) | Uses scmapi.lua to add support for `svn` ([Subversion](https://subversion.apache.org/)).  Disabled by default; refer to the usage information in the script for how to enable it.
 [show_tips.lua](show_tips.lua) | Shows a tip about Clink each time Clink is injected.
-[tilde_autoexpand.lua](tilde_autoexpand.lua) | Automatically expands tildes into the user's home directory (disabled by default; see usage information in the script file for how to enable it).
+[tabtitle.lua](tabtitle.lua) | Optionally sets the console title based on a template.  Disabled by default; refer to the usage information in the script file for details.
+[tilde_autoexpand.lua](tilde_autoexpand.lua) | Automatically expands tildes into the user's home directory.  Disabled by default; refer to the usage information in the script file for details.
 [toggle_short.lua](toggle_short.lua) | Adds a command to toggle the word under the cursor between long and short path names.  The default key binding is <kbd>Ctrl</kbd>-<kbd>Alt</kbd>-<kbd>A</kbd>.
 [vscode_shell_integration.lua](vscode_shell_integration.lua) | Automatically enables shell integration for VSCode embedded terminal windows.
 [web_search.lua](web_search.lua) | Shortcuts for searching popular search engines from the command line.  Run `web_search --list` for a list of available shortcuts.  Refer to the usage information in the script file for details.
-[z_dir_popup.lua](z_dir_popup.lua) | If you use [z.lua](https://github.com/skywind3000/z.lua) then this provides a popup listing of directories from z.  See usage information in the script file for details.
-[zoxide_dir_popup.lua](zoxide_dir_popup.lua) | If you use [zoxide](https://github.com/ajeetdsouza/zoxide) then this provides a popup listing of directories from zoxide.  See usage information in the script file for details.
+[where_hinter.lua](where_hinter.lua) | Can display a hint showing the location of the executable file in the command at the cursor position, if the `comment_row.show_hints` setting is enabled.  Refer to the usage information in the script file for details.
+[z_dir_popup.lua](z_dir_popup.lua) | If you use [z.lua](https://github.com/skywind3000/z.lua) then this provides a popup listing of directories from z.  Refer to the usage information in the script file for details.
+[zoxide_dir_popup.lua](zoxide_dir_popup.lua) | If you use [zoxide](https://github.com/ajeetdsouza/zoxide) then this provides a popup listing of directories from zoxide.  Refer to the usage information in the script file for details.
 
 # Setting up FZF
 
-Clink-gizmos includes clink-fzf, which provides optional integration with the [FZF](https://github.com/junegunn/fzf) fuzzy finder tool for filtering completions, directories, history, etc.
+Clink-gizmos includes [clink-fzf](https://github.com/chrisant996/clink-fzf), which provides optional integration with the [FZF](https://github.com/junegunn/fzf) fuzzy finder tool for filtering completions, directories, history, etc.
 
 To set up FZF integration, refer to the README at [clink-fzf](https://github.com/chrisant996/clink-fzf).
 
