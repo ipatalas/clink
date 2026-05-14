@@ -1,4 +1,3 @@
--- HTTPie completions
 local arghelper = require('arghelper')
 
 -- Argument matchers

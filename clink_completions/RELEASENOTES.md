@@ -1,5 +1,24 @@
 # Release Notes
 
+## 0.6.9 (Apr 18, 2026)
+
+  * Added `docker` and `dockerd` completions (#206).
+  * Updated `bat` completions.
+  * [git] Improvements to `git config` completions (#208).
+  * [git] Clarified input hints for certain `git` completions.
+  * Fixed certain modules to gracefully handle when a newer version of Clink is required.
+
+## 0.6.8 (Mar 5, 2026)
+
+  * [git] Added support for git reftables.
+  * Added completions for [ast-grep](https://ast-grep.github.io).
+  * Added completions for [httpie](https://httpie.io) (#204).
+  * [ssh] Changed ssh completions to follow include directives when collecting host completions (#203).
+  * Updated `gsudo` completions (per v2.6.1).
+  * [git] Removed `git_prompt.lua`; it was really part of [Cmder](https://github.com/cmderdev/cmder), and has been moved into Cmder itself.
+  * Added quotes around window titles in PID completions (process ID completions for various apps).
+  * (internal) Added `arghelper.make_exflags()` helper function that argmatchers can use.
+
 ## 0.6.7 (Nov 21, 2025)
 
   * [git] Always complete local files for `git log` and `git diff`.
