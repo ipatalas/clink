@@ -30,5 +30,3 @@ doskey /macrofile="%CLINK_DIR%\aliases"
 cmd /c "%CLINK_DIR%\clink installscripts %CLINK_DIR%\clink_completions >nul"
 cmd /c "%CLINK_DIR%\clink installscripts %CLINK_DIR%\clink-gizmos >nul"
 cmd /c "%CLINK_DIR%\clink installscripts %CLINK_DIR%\clink-mise >nul"
-
-cmd /c "%CLINK_DIR%\clink installscripts %CLINK_DIR%\clink-flexprompt >nul"

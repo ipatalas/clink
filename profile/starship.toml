@@ -1,0 +1,139 @@
+format = """
+$username\
+$hostname\
+$localip\
+$shlvl\
+$singularity\
+$kubernetes\
+$nats\
+$directory\
+$vcsh\
+$git_branch\
+$git_commit\
+$git_state\
+$git_metrics\
+$git_status\
+$pijul_channel\
+$docker_context\
+$package\
+$bun\
+$c\
+$cmake\
+$cobol\
+$cpp\
+$daml\
+$dart\
+$deno\
+$dotnet\
+$elixir\
+$elm\
+$erlang\
+$fennel\
+$gleam\
+$golang\
+$gradle\
+$haskell\
+$haxe\
+$helm\
+$java\
+$julia\
+$kotlin\
+$lua\
+$maven\
+$mojo\
+$nim\
+$nodejs\
+$ocaml\
+$odin\
+$opa\
+$perl\
+$php\
+$pulumi\
+$purescript\
+$python\
+$quarto\
+$raku\
+$rlang\
+$red\
+$ruby\
+$rust\
+$scala\
+$solidity\
+$swift\
+$terraform\
+$typst\
+$vlang\
+$vagrant\
+$xmake\
+$zig\
+$buf\
+$guix_shell\
+$nix_shell\
+$conda\
+$pixi\
+$meson\
+$spack\
+$memory_usage\
+$aws\
+$gcloud\
+$openstack\
+$azure\
+$direnv\
+$env_var\
+$mise\
+$crystal\
+$custom\
+$sudo\
+$cmd_duration\
+$line_break\
+$jobs\
+$battery\
+$status\
+$container\
+$netns\
+$os\
+$shell\
+$fill\
+$time
+$character"""
+add_newline = false
+
+[line_break]
+disabled = true
+
+[fill]
+symbol = ' '
+
+[directory]
+truncation_length = 5
+truncation_symbol = "..."
+truncate_to_repo = false
+before_repo_root_style = 'dimmed white'
+repo_root_style = 'cyan bold'
+use_logical_path = false
+format = '📁 [$path]($style)[$read_only]($read_only_style) '
+repo_root_format = '📁 [$before_root_path]($before_repo_root_style)[$repo_root]($repo_root_style)[$path]($style)[$read_only]($read_only_style) '
+
+[git_branch]
+style = 'green'
+
+[git_status]
+conflicted = '='
+ahead = ' ⇡${count}'
+behind = ' ⇣${count}'
+diverged = ' ⇕⇡${ahead_count}⇣${behind_count}'
+untracked = '?'
+stashed = ''
+modified = '!'
+staged = '+'
+renamed = '»'
+deleted = '✘'
+
+format = '([\[$all_status$ahead_behind\]]($style) )'
+style = "red bold"
+
+[time]
+disabled = false
+format = '🕙[ $time ]($style)'
+style = 'grey'
+time_format = '%T'
