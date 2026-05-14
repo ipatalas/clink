@@ -13,3 +13,4 @@ grh=git reset --hard
 log=TortoiseGitProc.exe /command:log
 ls=eza --icons $*
 ll=eza -l --icons $*
+gb=git branch $*  
