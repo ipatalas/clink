@@ -33,6 +33,7 @@ local cert_matcher = clink.argmatcher():addarg(clink.filematches)
 local cert_key_matcher = clink.argmatcher():addarg(clink.filematches)
 local cert_key_pass_matcher = clink.argmatcher():addarg({fromhistory=true})
 
+-- luacheck: push max line length 130
 local http_flags = arghelper.make_exflags({
     -- Content types
     { "-j", "--json", "Data items from the command line are serialized as a JSON object (default)" },
@@ -103,6 +104,6 @@ local http_flags = arghelper.make_exflags({
     { nil, "--default-scheme", scheme_matcher, " DEFAULT_SCHEME", "The default scheme to use if not specified in the URL" },
     { nil, "--debug", "Prints exception traceback and other debugging information" },
 })
+-- luacheck: pop
 
-clink.argmatcher("http"):_addexflags(http_flags)
-clink.argmatcher("https"):_addexflags(http_flags)
+clink.argmatcher("http", "https"):_addexflags(http_flags)
