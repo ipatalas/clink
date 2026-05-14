@@ -2,9 +2,13 @@
 # type: boolean
 autosuggest.enable = True
 
+# name: Show a suggestion in a muted color
+# type: boolean
+autosuggest.inline = True
+
 # name: A .clinkprompt file to use for the prompt
 # type: string
-clink.customprompt = 
+clink.customprompt =
 
 # name: Selects default key bindings
 # type: enum
@@ -194,6 +198,10 @@ prompt.transient = off
 # name: Automatically expand ~ to home directory
 # type: boolean
 tilde.autoexpand = False
+
+# name: Show a tip when Clink starts
+# type: boolean
+tips.enable = False
 
 # name: Use clink promptfilter to hook even if onbegined
 # type: boolean
