@@ -20,8 +20,11 @@ set HOME=%USERPROFILE%
 :: Extra env vars
 
 :: Configure fzf to use fd (faster than ripgrep and default)
-set FZF_CTRL_T_COMMAND=fd --hidden --follow --exclude ".git"
+set FZF_CTRL_T_COMMAND=fd --type f --hidden --follow --exclude ".git"
+set FZF_CTRL_T_OPTS=--preview "bat --color=always --line-range :100 {}"
 set FZF_ALT_C_COMMAND=fd --type d --hidden --follow --exclude ".git" --exclude "node_modules"
+set FZF_ALT_C_OPTS=--preview "tree -L 3 -C {}"
+set FZF_DEFAULT_OPTS=--height 50%% --layout=reverse --preview-window=right:70%
 
 :: Add aliases
 doskey /macrofile="%CLINK_DIR%\aliases"
