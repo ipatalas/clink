@@ -74,7 +74,7 @@ add_flags(install_matcher, shared_flags)
 add_flags(install_matcher, store_flags)
 add_flags(install_matcher, recursive_flags)
 add_flags(install_matcher, install_output_flags)
-install_matcher:addflags(
+:addflags(
     "--frozen-lockfile", "--no-frozen-lockfile",
     "--verify-store-integrity", "--no-verify-store-integrity",
     "-D", "--dev",
@@ -117,7 +117,7 @@ add_flags(add_matcher, bool_color_flags)
 add_flags(add_matcher, shared_flags)
 add_flags(add_matcher, store_flags)
 add_flags(add_matcher, recursive_flags)
-add_matcher:addflags(
+:addflags(
     "-E", "--save-exact",
     "--no-save-exact",
     "--save-workspace-protocol",
@@ -142,7 +142,7 @@ local dedupe_matcher = clink.argmatcher()
 add_flags(dedupe_matcher, bool_color_flags)
 add_flags(dedupe_matcher, shared_flags)
 add_flags(dedupe_matcher, store_flags)
-dedupe_matcher:addflags(
+:addflags(
     "--check",
     "--ignore-scripts",
     "--offline",
@@ -154,7 +154,7 @@ dedupe_matcher:addflags(
 local fetch_matcher = clink.argmatcher()
 add_flags(fetch_matcher, bool_color_flags)
 add_flags(fetch_matcher, shared_flags)
-fetch_matcher:addflags(
+:addflags(
     "-D", "--dev",
     "-P", "--prod",
     "-w", "--workspace-root"
@@ -172,12 +172,12 @@ add_flags(install_test_matcher, install_output_flags)
 local link_matcher = clink.argmatcher():addarg({matchers.dirs, modules_arg}):loop(1)
 add_flags(link_matcher, bool_color_flags)
 add_flags(link_matcher, shared_flags)
-link_matcher:addflags("-w", "--workspace-root")
+:addflags("-w", "--workspace-root")
 
 local prune_matcher = clink.argmatcher()
 add_flags(prune_matcher, bool_color_flags)
 add_flags(prune_matcher, shared_flags)
-prune_matcher:addflags(
+:addflags(
     "--ignore-scripts",
     "--no-optional",
     "--prod",
@@ -188,7 +188,7 @@ local rebuild_matcher = clink.argmatcher():addarg(modules_arg):loop(1)
 add_flags(rebuild_matcher, bool_color_flags)
 add_flags(rebuild_matcher, shared_flags)
 add_flags(rebuild_matcher, recursive_flags)
-rebuild_matcher:addflags(
+:addflags(
     "--pending",
     "--store-dir" .. dir_arg
 )
@@ -197,7 +197,7 @@ local remove_matcher = clink.argmatcher():addarg(modules_arg):loop(1)
 add_flags(remove_matcher, bool_color_flags)
 add_flags(remove_matcher, shared_flags)
 add_flags(remove_matcher, recursive_flags)
-remove_matcher:addflags(
+:addflags(
     "--global-dir" .. dir_arg,
     "-D", "--save-dev",
     "-O", "--save-optional",
@@ -213,7 +213,7 @@ local update_matcher = clink.argmatcher():addarg(modules_arg):loop(1)
 add_flags(update_matcher, bool_color_flags)
 add_flags(update_matcher, shared_flags)
 add_flags(update_matcher, recursive_flags)
-update_matcher:addflags(
+:addflags(
     "--depth" .. empty_arg,
     "-D", "--dev",
     "-g", "--global",
@@ -226,13 +226,13 @@ update_matcher:addflags(
 )
 
 local patch_matcher = clink.argmatcher():addarg(pkg_arg)
-patch_matcher:addflags("--edit-dir" .. dir_arg, "--ignore-existing")
+:addflags("--edit-dir" .. dir_arg, "--ignore-existing")
 
 local patch_commit_matcher = clink.argmatcher():addarg(dir_arg):addflags("--patches-dir" .. dir_arg)
 local patch_remove_matcher = clink.argmatcher():addarg(pkg_arg):loop(1)
 
 local audit_matcher = clink.argmatcher()
-audit_matcher:addflags(
+:addflags(
     "--audit-level" .. clink.argmatcher():addarg({"low", "moderate", "high", "critical"}),
     "-D", "--dev",
     "--fix",
@@ -245,9 +245,9 @@ audit_matcher:addflags(
 )
 
 local licenses_matcher = clink.argmatcher()
-licenses_matcher:addarg({"ls", "list"})
+:addarg({"ls", "list"})
 add_flags(licenses_matcher, recursive_flags)
-licenses_matcher:addflags(
+:addflags(
     "-D", "--dev",
     "--json",
     "--long",
@@ -259,7 +259,7 @@ local list_matcher = clink.argmatcher():addarg(modules_arg):loop(1)
 add_flags(list_matcher, bool_color_flags)
 add_flags(list_matcher, shared_flags)
 add_flags(list_matcher, recursive_flags)
-list_matcher:addflags(
+:addflags(
     "--depth" .. empty_arg,
     "-D", "--dev",
     "--exclude-peers",
@@ -278,7 +278,7 @@ local outdated_matcher = clink.argmatcher():addarg(modules_arg):loop(1)
 add_flags(outdated_matcher, bool_color_flags)
 add_flags(outdated_matcher, shared_flags)
 add_flags(outdated_matcher, recursive_flags)
-outdated_matcher:addflags(
+:addflags(
     "--compatible",
     "-D", "--dev",
     "--format" .. clink.argmatcher():addarg({"table", "list", "json"}),
@@ -294,7 +294,7 @@ local why_matcher = clink.argmatcher():addarg(modules_arg):loop(1)
 add_flags(why_matcher, bool_color_flags)
 add_flags(why_matcher, shared_flags)
 add_flags(why_matcher, recursive_flags)
-why_matcher:addflags(
+:addflags(
     "--depth" .. empty_arg,
     "-D", "--dev",
     "--exclude-peers",
@@ -310,7 +310,7 @@ why_matcher:addflags(
 local approve_builds_matcher = clink.argmatcher():addflags("--all", "-g", "--global")
 local create_matcher = clink.argmatcher():addarg(pkg_arg):loop(1):addflags("--allow-build" .. empty_arg)
 local dlx_matcher = clink.argmatcher():addarg(pkg_arg):loop(1)
-dlx_matcher:addflags(
+:addflags(
     "--allow-build" .. empty_arg,
     "--package" .. pkg_arg,
     "-c", "--shell-mode",
@@ -321,14 +321,12 @@ dlx_matcher:addflags(
 local exec_matcher = clink.argmatcher():addarg(empty_arg):loop(1)
 add_flags(exec_matcher, bool_color_flags)
 add_flags(exec_matcher, shared_flags)
-exec_matcher:addflags(
+:addflags(
     "-c", "--shell-mode",
     "--no-reporter-hide-prefix",
     "--parallel",
     "--report-summary",
     "--resume-from" .. empty_arg,
-    "--stream",
-    "--use-stderr",
     "-w", "--workspace-root"
 )
 
@@ -338,7 +336,7 @@ local run_matcher = clink.argmatcher():addarg({scripts}):addarg(empty_arg):loop(
 add_flags(run_matcher, bool_color_flags)
 add_flags(run_matcher, shared_flags)
 add_flags(run_matcher, recursive_flags)
-run_matcher:addflags(
+:addflags(
     "--if-present",
     "--no-bail",
     "--parallel",
@@ -362,12 +360,13 @@ local test_matcher = clink.argmatcher():addarg(empty_arg):loop(1)
 local bin_matcher = clink.argmatcher():addflags("-g", "--global")
 
 local config_matcher = clink.argmatcher()
-config_matcher:addarg({
+:addarg({
     "set" .. clink.argmatcher():addarg(empty_arg):addarg(empty_arg),
     "get" .. clink.argmatcher():addarg(empty_arg),
     "delete" .. clink.argmatcher():addarg(empty_arg),
     "list",
-}):addflags(
+})
+:addflags(
     "-g", "--global",
     "--json",
     "--location" .. clink.argmatcher():addarg({"project", "global"})
@@ -375,7 +374,7 @@ config_matcher:addarg({
 
 local deploy_matcher = clink.argmatcher():addarg(dir_arg)
 add_flags(deploy_matcher, recursive_flags)
-deploy_matcher:addflags("-D", "--dev", "--legacy", "--no-optional", "-P", "--prod")
+:addflags("-D", "--dev", "--legacy", "--no-optional", "-P", "--prod")
 
 local doctor_matcher = clink.argmatcher()
 local init_matcher = clink.argmatcher():addflags(
@@ -386,7 +385,7 @@ local init_matcher = clink.argmatcher():addflags(
 
 local pack_matcher = clink.argmatcher()
 add_flags(pack_matcher, recursive_flags)
-pack_matcher:addflags(
+:addflags(
     "--dry-run",
     "--json",
     "--out" .. file_arg,
@@ -396,7 +395,7 @@ pack_matcher:addflags(
 
 local publish_matcher = clink.argmatcher():addarg({file_arg, dir_arg})
 add_flags(publish_matcher, recursive_flags)
-publish_matcher:addflags(
+:addflags(
     "--access" .. clink.argmatcher():addarg({"public", "restricted"}),
     "--dry-run",
     "--force",
@@ -413,14 +412,15 @@ local root_matcher = clink.argmatcher():addflags("-g", "--global")
 local self_update_matcher = clink.argmatcher():addarg(empty_arg):loop(1)
 
 local env_matcher = clink.argmatcher()
-env_matcher:addarg({
+:addarg({
     "add" .. clink.argmatcher():addarg(empty_arg):loop(1),
     "ls",
     "list" .. clink.argmatcher():addarg(empty_arg):loop(1),
     "rm" .. clink.argmatcher():addarg(empty_arg):loop(1),
     "remove" .. clink.argmatcher():addarg(empty_arg):loop(1),
     "use" .. clink.argmatcher():addarg(empty_arg):loop(1),
-}):addflags(
+})
+:addflags(
     "-g", "--global",
     "--remote"
 )
@@ -430,7 +430,7 @@ local cat_index_matcher = clink.argmatcher():addarg(pkg_arg)
 local find_hash_matcher = clink.argmatcher():addarg(empty_arg)
 
 local store_matcher = clink.argmatcher()
-store_matcher:addarg({
+:addarg({
     "add" .. clink.argmatcher():addarg(pkg_arg):loop(1),
     "path",
     "prune" .. clink.argmatcher():addflags("--force"),
@@ -438,7 +438,7 @@ store_matcher:addarg({
 })
 
 local cache_matcher = clink.argmatcher()
-cache_matcher:addarg({
+:addarg({
     "delete" .. clink.argmatcher():addarg(pkg_arg):loop(1),
     "list" .. clink.argmatcher():addarg(pkg_arg):loop(1),
     "list-registries",
