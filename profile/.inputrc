@@ -11,3 +11,4 @@ set completion-auto-query-items                 on
 set history-point-at-end-of-anchored-search     on
 set search-ignore-case                          on
 
+"\eg":    "luafunc:fzf_ripgrep"

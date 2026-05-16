@@ -8,7 +8,7 @@ autosuggest.inline = True
 
 # name: A .clinkprompt file to use for the prompt
 # type: string
-clink.customprompt =
+clink.customprompt = 
 
 # name: Selects default key bindings
 # type: enum
@@ -159,6 +159,10 @@ comment_row.show_hints = True
 # name: Use default key bindings
 # type: boolean
 fzf.default_bindings = True
+
+# name: Key binding to toggle fzf mode
+# type: string
+fzf_rg.fzf_key = alt-g
 
 # name: The number of history lines to save
 # type: integer
