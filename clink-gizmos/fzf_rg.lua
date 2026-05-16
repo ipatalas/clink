@@ -48,7 +48,7 @@
 --      CTRL-\          = Toggles the preview pane on the bottom.
 --
 --      CTRL-R          = Use ripgrep mode; list matches in files.
---      CTRL-F          = Use fzf mode; filter matches further.
+--      CTRL-G          = Use fzf mode; filter matches further.
 --
 --      CTRL-U          = Clear the query text.
 --
