@@ -14,3 +14,5 @@ log=TortoiseGitProc.exe /command:log
 ls=eza --icons $*
 ll=eza -l --icons $*
 gb=git branch $*  
+pnx=pnpm dlx $*  
+bunx=bun x $*  
