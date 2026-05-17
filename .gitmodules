@@ -1,0 +1,3 @@
+[submodule "clink-completions"]
+	path = clink-completions
+	url = https://github.com/ipatalas/clink-completions.git

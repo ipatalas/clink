@@ -30,7 +30,7 @@ set FZF_RG_EDITOR=code --goto {file}:{line}
 :: Add aliases
 doskey /macrofile="%CLINK_DIR%\aliases"
 
-:: Add additional install scripts (wrapped around cmd /c to surpress non-zero exit code
-cmd /c "%CLINK_DIR%\clink installscripts %CLINK_DIR%\clink_completions >nul"
+:: Add additional install scripts (wrapped around cmd /c to surpress non-zero exit code)
+cmd /c "%CLINK_DIR%\clink installscripts %CLINK_DIR%\clink-completions >nul"
 cmd /c "%CLINK_DIR%\clink installscripts %CLINK_DIR%\clink-gizmos >nul"
 cmd /c "%CLINK_DIR%\clink installscripts %CLINK_DIR%\clink-mise >nul"
