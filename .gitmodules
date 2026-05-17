@@ -4,3 +4,6 @@
 [submodule "clink-gizmos"]
 	path = clink-gizmos
 	url = https://github.com/ipatalas/clink-gizmos
+[submodule "clink-mise"]
+	path = clink-mise
+	url = https://github.com/binyaminyblatt/mise-clink.git
