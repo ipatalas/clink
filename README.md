@@ -27,56 +27,16 @@ This is a "backup" of my current WT settings. Feel free to use it but YMMV and I
 ```shell
 $ choco install fzf fd eza ripgrep jq zoxide
 ```
-4. Setup Windows Terminal task: 
-
-You can open your settings file by opening Command Palette (**Ctrl-Shift-P** by default), typing `json` and selecting `Open settings file (JSON)` (**Ctrl-Shift-,** by default)
-
-![settings](settings-file.png)
-
-Put the following into `profiles.list[]` section:
-```json
-{
-    "bellStyle": "taskbar",
-    "commandline": "%SystemRoot%\\System32\\cmd.exe /s /k \"%CLINK_DIR%\\clink_x64.exe inject --profile %CLINK_DIR%\\profile\"",
-    "elevate": false,
-    "guid": "{6d765724-f16b-47d1-9e76-60051d01d354}",
-    "hidden": false,
-    "icon": "%CLINK_DIR%\\clink.ico",
-    "name": "Clink",
-    "startingDirectory": "%USERPROFILE%"
-}
+4. Run the following command in Clink directory to set it up:
+```shell
+$ clink autorun install -- --profile <PATH_TO_CLINK>\profile
 ```
 
-5. Set as default profile if you like it
+This will set up Clink to run with the provided profile on every cmd.exe session. If you want to have it only in WT, you can skip this step and configure WT to run cmd.exe with Clink profile (`cmd.exe /s /k "%CLINK_DIR%\clink_x64.exe inject --profile %CLINK_DIR%\profile"`).
 
-> [!NOTE] 
-> Clink can be configured with autorun and it then attaches automatically to all cmd.exe sessions. I prefer to have it bundled inside the repo and run explicitly but feel free to adjust to your liking.
-
-# VSCode integration
-
-You can have the same experience in VSCode terminal by adding the following to the settings (`Preferences: Open User Settings (JSON)` command):
-
-```json
-  "terminal.integrated.profiles.windows": {
-    "Clink": {
-      "path": [
-        "${env:windir}\\Sysnative\\cmd.exe",
-        "${env:windir}\\System32\\cmd.exe"
-      ],
-      "args": [
-        "/s",
-        "/k",
-        "%CLINK_DIR%\\clink_x64.exe",
-        "inject",
-        "--profile",
-        "%CLINK_DIR%\\profile"
-      ],
-      "color": "terminal.ansiBlue",
-      "icon": "terminal"
-    },
-  },
-  "terminal.integrated.fontFamily": "'MesloLGS NF'",
-  "terminal.integrated.defaultProfile.windows": "Clink",
+In order to get rid of standard cmd.exe welcome message change settings in WT (and other apps if needed) to run cmd.exe with `/K` like this:
+```shell
+cmd.exe /k
 ```
 
 # Extras
