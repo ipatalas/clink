@@ -6,7 +6,7 @@ This is a "backup" of my current WT settings. Feel free to use it but YMMV and I
 
 - [Clink](https://github.com/chrisant996/clink) with all its glory
 - [Clink completions](https://github.com/chrisant996/clink-completions) for git, npm, etc.
-- [Clink flex prompt](https://github.com/chrisant996/clink-flex-prompt) + font for glyphs
+- [Starship prompt](https://starship.rs)
 - [Clink Gizmos](https://github.com/chrisant996/clink-gizmos)
 - Integration with [fzf](https://github.com/junegunn/fzf) - part of clink-gizmos
 - Integration with [zoxide](https://github.com/ajeetdsouza/zoxide) - smart directory jumping
